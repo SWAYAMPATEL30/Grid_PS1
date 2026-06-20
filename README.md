@@ -102,9 +102,99 @@ ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 
 ---
 
-## ☁️ Deploy to Vercel (Frontend) + Railway (Backend)
+## ☁️ Cloud Deployment (Full Stack)
 
-> **Important:** Vercel hosts only the **Next.js frontend**. The FastAPI backend + PostgreSQL must be hosted separately. We recommend **Railway** (free tier available).
+The **entire stack** (Frontend + Backend + PostgreSQL) can be hosted on either **Railway** or **Render** from the same GitHub repo — no split needed.
+
+---
+
+### 🚂 Option A — Deploy Everything on Railway
+
+Railway supports multiple services from one repository.
+
+**Step 1: Create the project**
+1. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo** → select `Grid_PS1`
+
+**Step 2: Add PostgreSQL**
+- Click **"+ New"** → **"Database"** → **"Add PostgreSQL"**
+- Railway auto-injects `DATABASE_URL` into all services
+
+**Step 3: Deploy the Backend**
+- Click **"+ New"** → **"GitHub Repo"** → `Grid_PS1`
+- In the service settings → **Root Directory** → set to `backend`
+- **Start Command:**
+  ```
+  gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w 4 --bind 0.0.0.0:$PORT --timeout 120
+  ```
+- **Environment Variables:**
+  ```
+  ENVIRONMENT=production
+  JWT_SECRET=<generate a strong random string>
+  ALLOWED_ORIGINS=https://<your-frontend>.up.railway.app
+  ```
+- Go to **Deploy** tab → click **Deploy** → once running, open the **Shell** tab and run:
+  ```bash
+  python scripts/run_migrations.py
+  python scripts/seed_demo.py
+  ```
+- Copy the backend's **public URL** (e.g. `https://grid-ps1-api.up.railway.app`)
+
+**Step 4: Deploy the Frontend**
+- Click **"+ New"** → **"GitHub Repo"** → `Grid_PS1`
+- In service settings → **Root Directory** → leave as `.` (root, uses `Dockerfile`)
+- **Environment Variables:**
+  ```
+  NEXT_PUBLIC_API_BASE_URL=https://<your-backend>.up.railway.app
+  ```
+- Click **Deploy** ✅
+
+**Step 5: Update CORS**
+- Go back to the backend service → update `ALLOWED_ORIGINS` with the frontend Railway URL.
+
+---
+
+### 🎨 Option B — Deploy Everything on Render (with render.yaml)
+
+Render supports **Infrastructure as Code** via `render.yaml` — this repo already has it configured!
+
+**Step 1: Connect repo**
+1. Go to [render.com](https://render.com) → **New** → **Blueprint** → connect GitHub → select `Grid_PS1`
+2. Render reads `render.yaml` and **auto-creates all 3 services**: database, backend, frontend.
+
+**Step 2: Configure URLs**
+After the first deploy, get the backend URL (e.g. `https://parksight-api.onrender.com`) and:
+- Update `NEXT_PUBLIC_API_BASE_URL` on the **frontend** service
+- Update `ALLOWED_ORIGINS` on the **backend** service
+
+**Step 3: Run migrations**
+In the Render dashboard → backend service → **Shell**:
+```bash
+python scripts/run_migrations.py
+python scripts/seed_demo.py
+```
+
+> [!WARNING]
+> **Render free tier:** Web services **sleep after 15 minutes** of inactivity (cold start ~30s). Upgrade to Starter ($7/mo) to keep services always-on.
+
+---
+
+### Platform Comparison
+
+| Feature | Railway | Render | Vercel + Railway |
+|---|---|---|---|
+| Full stack in one place | ✅ | ✅ | ❌ (split) |
+| Free tier | $5 credit/mo | Yes (sleeps) | Yes |
+| Always-on free | ✅ | ❌ | ✅ |
+| PostgreSQL included | ✅ | ✅ | ✅ (Railway) |
+| Docker support | ✅ | ✅ | ❌ frontend only |
+| IaC config file | `railway.toml` | `render.yaml` ✅ | `vercel.json` |
+| Best for | Full stack | Full stack | Frontend-only |
+
+> **Recommendation:** Use **Railway** for the simplest experience. Use **Render** if you want true IaC with `render.yaml` auto-deployment.
+
+---
+
+
 
 ---
 
