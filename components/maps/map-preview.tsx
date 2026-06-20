@@ -1,43 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  APIProvider,
-  Map,
-  AdvancedMarker,
-  InfoWindow,
-} from '@vis.gl/react-google-maps';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import { parkSightApi } from '@/lib/api-client';
 import { useTheme } from 'next-themes';
 
-const BENGALURU_CENTER = { lat: 12.9716, lng: 77.5946 };
-const MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '';
-
-// Dark map style (no Cloud Console mapId needed)
-const DARK_STYLES: google.maps.MapTypeStyle[] = [
-  { elementType: 'geometry', stylers: [{ color: '#1d2c4d' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#8ec3b9' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#1a3646' }] },
-  { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#4b6878' }] },
-  { featureType: 'landscape.man_made', elementType: 'geometry.stroke', stylers: [{ color: '#334e87' }] },
-  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#023e58' }] },
-  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#283d6a' }] },
-  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#6f9ba5' }] },
-  { featureType: 'poi', elementType: 'labels.text.stroke', stylers: [{ color: '#1d2c4d' }] },
-  { featureType: 'poi.park', elementType: 'geometry.fill', stylers: [{ color: '#023e58' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#304a7d' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#98a5be' }] },
-  { featureType: 'road', elementType: 'labels.text.stroke', stylers: [{ color: '#1d2c4d' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2c6675' }] },
-  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#255763' }] },
-  { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#b0d5ce' }] },
-  { featureType: 'road.highway', elementType: 'labels.text.stroke', stylers: [{ color: '#023747' }] },
-  { featureType: 'transit', elementType: 'labels.text.fill', stylers: [{ color: '#98a5be' }] },
-  { featureType: 'transit', elementType: 'labels.text.stroke', stylers: [{ color: '#1d2c4d' }] },
-  { featureType: 'transit.line', elementType: 'geometry.fill', stylers: [{ color: '#283d6a' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e1626' }] },
-  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4e6d70' }] },
-];
+const BENGALURU_CENTER: [number, number] = [12.9716, 77.5946];
 
 interface Zone {
   name: string;
@@ -46,93 +15,23 @@ interface Zone {
   count: number;
 }
 
-function getMarkerStyle(count: number, maxCount: number) {
+function getMarkerColor(count: number, maxCount: number): string {
   const pct = count / maxCount;
-  if (pct > 0.7) return '#ef4444';
-  if (pct > 0.4) return '#f97316';
-  if (pct > 0.2) return '#eab308';
-  return '#22c55e';
-}
-
-function ZoneMarkers({ zones }: { zones: Zone[] }) {
-  const [selected, setSelected] = useState<Zone | null>(null);
-  const maxCount = Math.max(...zones.map(z => z.count), 1);
-
-  return (
-    <>
-      {zones.map((zone, i) => {
-        const bg = getMarkerStyle(zone.count, maxCount);
-        const size = 34 + Math.round((zone.count / maxCount) * 28);
-        const label =
-          zone.count >= 1000 ? `${(zone.count / 1000).toFixed(1)}k` : String(zone.count);
-        return (
-          <AdvancedMarker
-            key={i}
-            position={{ lat: zone.lat, lng: zone.lng }}
-            onClick={() => setSelected(zone)}
-          >
-            <div
-              style={{
-                width: size,
-                height: size,
-                borderRadius: '50%',
-                background: bg,
-                border: '3px solid white',
-                boxShadow: `0 3px 14px rgba(0,0,0,0.4), 0 0 0 1px ${bg}44`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontSize: Math.max(9, size / 3.8),
-                fontWeight: 800,
-                cursor: 'pointer',
-                userSelect: 'none',
-                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform = 'scale(1.18)';
-                e.currentTarget.style.boxShadow = `0 6px 20px rgba(0,0,0,0.5), 0 0 0 2px ${bg}88`;
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = `0 3px 14px rgba(0,0,0,0.4), 0 0 0 1px ${bg}44`;
-              }}
-              title={zone.name}
-            >
-              {label}
-            </div>
-          </AdvancedMarker>
-        );
-      })}
-      {selected && (
-        <InfoWindow
-          position={{ lat: selected.lat, lng: selected.lng }}
-          onCloseClick={() => setSelected(null)}
-        >
-          <div style={{ padding: '6px 10px', minWidth: 170, fontFamily: 'sans-serif' }}>
-            <p style={{ fontWeight: 700, fontSize: 13, color: '#0f172a', marginBottom: 4 }}>
-              {selected.name}
-            </p>
-            <p style={{ fontSize: 12, color: '#475569' }}>
-              <span style={{ fontWeight: 700, color: '#1d4ed8', fontSize: 16 }}>
-                {selected.count.toLocaleString()}
-              </span>{' '}violations
-            </p>
-          </div>
-        </InfoWindow>
-      )}
-    </>
-  );
+  if (pct > 0.7) return '#ef4444'; // red
+  if (pct > 0.4) return '#f97316'; // orange
+  if (pct > 0.2) return '#eab308'; // yellow
+  return '#22c55e'; // green
 }
 
 export function InteractiveMapPreview() {
   const [zones, setZones] = useState<Zone[]>([]);
   const [loading, setLoading] = useState(true);
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    parkSightApi
-      .getHeatmapZones()
+    setMounted(true);
+    parkSightApi.getHeatmapZones()
       .then((fc: any) => {
         if (fc?.features) {
           setZones(
@@ -152,30 +51,68 @@ export function InteractiveMapPreview() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="h-full w-full bg-slate-100 dark:bg-slate-800 animate-pulse rounded-lg flex items-center justify-center">
-        <span className="text-slate-400 text-sm">Loading violation map…</span>
+        <span className="text-slate-400 text-sm">Loading map…</span>
       </div>
     );
   }
 
-  const center = zones.length > 0 ? { lat: zones[0].lat, lng: zones[0].lng } : BENGALURU_CENTER;
+  const maxCount = Math.max(...zones.map(z => z.count), 1);
+  const tileUrl = resolvedTheme === 'dark'
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
   return (
-    <APIProvider apiKey={MAPS_KEY}>
-      <Map
-        defaultCenter={center}
-        defaultZoom={11}
-        gestureHandling="cooperative"
-        style={{ width: '100%', height: '100%', borderRadius: '0.5rem' }}
-        styles={resolvedTheme === 'dark' ? DARK_STYLES : []}
-        streetViewControl={false}
-        mapTypeControl={false}
-        fullscreenControl={false}
+    <div style={{ height: '100%', width: '100%', borderRadius: '0.5rem', overflow: 'hidden' }}>
+      <MapContainer
+        center={zones.length > 0 ? [zones[0].lat, zones[0].lng] : BENGALURU_CENTER}
+        zoom={11}
+        style={{ height: '100%', width: '100%', backgroundColor: resolvedTheme === 'dark' ? '#0f172a' : '#f8fafc' }}
+        zoomControl={false}
       >
-        <ZoneMarkers zones={zones} />
-      </Map>
-    </APIProvider>
+        <TileLayer
+          url={tileUrl}
+          attribution='&copy; OpenStreetMap &copy; CARTO'
+        />
+        {zones.map((zone, i) => {
+          const color = getMarkerColor(zone.count, maxCount);
+          const radius = 6 + Math.round((zone.count / maxCount) * 16);
+          return (
+            <CircleMarker
+              key={i}
+              center={[zone.lat, zone.lng]}
+              radius={radius}
+              pathOptions={{
+                fillColor: color,
+                color: 'white',
+                weight: 1.5,
+                fillOpacity: 0.8,
+              }}
+            >
+              <Popup className={resolvedTheme === 'dark' ? 'dark-popup' : ''}>
+                <div className="p-1 min-w-[140px]">
+                  <p className="font-bold text-sm text-slate-800">{zone.name}</p>
+                  <p className="text-xs text-slate-600 mt-1">
+                    <strong className="text-blue-600 text-base">{zone.count.toLocaleString()}</strong> violations
+                  </p>
+                </div>
+              </Popup>
+            </CircleMarker>
+          );
+        })}
+      </MapContainer>
+      {/* Dynamic CSS injection to fix Popup styling in dark mode since Leaflet CSS is global */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .leaflet-container { font-family: inherit; }
+        .dark-popup .leaflet-popup-content-wrapper, .dark-popup .leaflet-popup-tip {
+          background-color: #0f172a !important;
+          color: #f1f5f9 !important;
+        }
+        .dark-popup .leaflet-popup-content p { color: #cbd5e1 !important; }
+        .dark-popup .leaflet-popup-content strong { color: #60a5fa !important; }
+      `}} />
+    </div>
   );
 }
