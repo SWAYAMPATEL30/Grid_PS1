@@ -132,7 +132,7 @@ export default function HeatmapPage() {
               <div key={i} className="h-32 bg-slate-800 animate-pulse rounded-xl" />
             ))
           : topFeatures.map((f, index) => (
-            <div key={f.id || f.properties?.zone_name || index} className="rounded-xl border border-slate-800 bg-slate-900 p-4 relative overflow-hidden">
+            <div key={f.properties?.zone_name || index} className="rounded-xl border border-slate-800 bg-slate-900 p-4 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-3 opacity-10">
                 <MapPin className="h-16 w-16" />
               </div>
