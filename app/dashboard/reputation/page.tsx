@@ -67,27 +67,27 @@ export default function DriverReputationPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <KPICard
-          label="Excellent Drivers"
+          title="Excellent Drivers"
           value="2,340"
-          change="+8.2% this month"
+          trend={{ value: 8.2, isPositive: true }}
           icon={<Award className="h-5 w-5" />}
         />
         <KPICard
-          label="Avg. Reputation Score"
-          value="68.4"
-          change="out of 100"
+          title="Avg. Reputation Score"
+          value="68.4 / 100"
+          trend={{ value: 3.1, isPositive: true }}
           icon={<Shield className="h-5 w-5" />}
         />
         <KPICard
-          label="Repeat Violators"
+          title="Repeat Violators"
           value="420"
-          change="Critical tier"
+          trend={{ value: 5.4, isPositive: false }}
           icon={<AlertTriangle className="h-5 w-5" />}
         />
         <KPICard
-          label="Rehabilitated Drivers"
+          title="Rehabilitated Drivers"
           value="1,240"
-          change="+15% compliance"
+          trend={{ value: 15, isPositive: true }}
           icon={<Heart className="h-5 w-5" />}
         />
       </div>
