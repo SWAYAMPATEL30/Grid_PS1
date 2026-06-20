@@ -41,10 +41,11 @@ export default function EnforcementPage() {
     load();
   }, []);
 
-  const topOfficer = officers.length ? officers.sort((a, b) => ((b.avg_severity || 0) * 10) - ((a.avg_severity || 0) * 10))[0] : null;
-  const totalCases = officers.reduce((s, o) => s + (o.total_violations || 0), 0);
+  // OfficerKPI fields: officer_id, station, cases_filed, approval_rate, avg_close_lag_mins, correction_rate, zones_covered, composite_score
+  const topOfficer = officers.length ? [...officers].sort((a, b) => (b.composite_score || 0) - (a.composite_score || 0))[0] : null;
+  const totalCases = officers.reduce((s, o) => s + (o.cases_filed || 0), 0);
   const avgApproval = officers.length
-    ? (officers.reduce((s, o) => s + ((o.scita_sent / Math.max(o.total_violations || 1, 1)) * 100), 0) / officers.length).toFixed(1)
+    ? (officers.reduce((s, o) => s + (o.approval_rate || 0), 0) / officers.length).toFixed(1)
     : 0;
 
   return (
@@ -71,7 +72,7 @@ export default function EnforcementPage() {
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
           <p className="text-sm text-slate-400">Top Officer Score</p>
           <p className="mt-2 text-2xl font-bold text-blue-400">
-            {loading || !topOfficer ? '—' : ((topOfficer.avg_severity || 0) * 10).toFixed(1)}
+            {loading || !topOfficer ? '—' : (topOfficer.composite_score || 0).toFixed(1)}
           </p>
           {topOfficer && <p className="text-xs text-slate-500 mt-1">{topOfficer.officer_id}</p>}
         </div>
@@ -122,20 +123,20 @@ export default function EnforcementPage() {
                       <tr key={o.officer_id} className="border-b border-slate-800 hover:bg-slate-800/50">
                         <td className="px-4 py-3 font-mono text-sm font-semibold text-slate-100">{o.officer_id}</td>
                         <td className="px-4 py-3 text-sm text-slate-300">{o.station}</td>
-                        <td className="px-4 py-3 text-sm text-slate-100">{(o.total_violations || 0).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-sm text-slate-100">{(o.cases_filed || 0).toLocaleString()}</td>
                         <td className="px-4 py-3 text-sm">
                           <div className="flex items-center gap-2">
-                            <span className={((o.scita_sent / Math.max(o.total_violations || 1, 1)) * 100) >= 70 ? 'text-emerald-400' : 'text-orange-400'}>
-                              {((o.scita_sent / Math.max(o.total_violations || 1, 1)) * 100).toFixed(1)}%
+                            <span className={(o.approval_rate || 0) >= 70 ? 'text-emerald-400' : 'text-orange-400'}>
+                              {(o.approval_rate || 0).toFixed(1)}%
                             </span>
-                            <ScoreBar value={((o.scita_sent / Math.max(o.total_violations || 1, 1)) * 100)} color={((o.scita_sent / Math.max(o.total_violations || 1, 1)) * 100) >= 70 ? 'bg-emerald-500' : 'bg-orange-500'} />
+                            <ScoreBar value={o.approval_rate || 0} color={(o.approval_rate || 0) >= 70 ? 'bg-emerald-500' : 'bg-orange-500'} />
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-400">{(o.avg_lag_mins || 0).toFixed(0)} min</td>
-                        <td className="px-4 py-3 text-sm text-slate-300">{o.scita_sent}</td>
+                        <td className="px-4 py-3 text-sm text-slate-400">{(o.avg_close_lag_mins || 0).toFixed(0)} min</td>
+                        <td className="px-4 py-3 text-sm text-slate-300">{o.zones_covered}</td>
                         <td className="px-4 py-3">
-                          <span className={`text-sm font-bold ${((o.avg_severity || 0) * 10) >= 70 ? 'text-emerald-400' : ((o.avg_severity || 0) * 10) >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
-                            {((o.avg_severity || 0) * 10).toFixed(1)}
+                          <span className={`text-sm font-bold ${(o.composite_score || 0) >= 70 ? 'text-emerald-400' : (o.composite_score || 0) >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+                            {(o.composite_score || 0).toFixed(1)}
                           </span>
                         </td>
                       </tr>
@@ -173,14 +174,14 @@ export default function EnforcementPage() {
                   : stations.map(s => (
                       <tr key={s.station} className="border-b border-slate-800 hover:bg-slate-800/50">
                         <td className="px-4 py-3 text-sm font-semibold text-slate-100">{s.station}</td>
-                        <td className="px-4 py-3 text-sm text-slate-300">{(s.total_violations || 0).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-sm text-slate-300">{(s.total_cases || 0).toLocaleString()}</td>
                         <td className="px-4 py-3 text-sm">
                           <span className={(s.approval_rate || 0) >= 70 ? 'text-emerald-400 font-semibold' : 'text-orange-400'}>
                             {(s.approval_rate || 0).toFixed(1)}%
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-400">{(s.avg_lag_mins || 0).toFixed(0)} min</td>
-                        <td className="px-4 py-3 text-sm text-red-400">{(s.scita_rate || 0).toFixed(1)}%</td>
+                        <td className="px-4 py-3 text-sm text-slate-400">{(s.avg_lag || 0).toFixed(0)} min</td>
+                        <td className="px-4 py-3 text-sm text-red-400">{(s.correction_rate || 0).toFixed(1)}%</td>
                       </tr>
                     ))}
               </tbody>
