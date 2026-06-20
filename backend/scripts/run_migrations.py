@@ -11,6 +11,8 @@ DATABASE_URL = os.getenv(
 SYNC_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
 
 DDL_PHASE2 = """
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 CREATE TABLE IF NOT EXISTS users (
   id VARCHAR PRIMARY KEY,
   email VARCHAR UNIQUE NOT NULL,
