@@ -21,13 +21,10 @@ DATABASE_URL = os.getenv(
 SYNC_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
 
 DDL = """
-CREATE EXTENSION IF NOT EXISTS postgis;
-
 CREATE TABLE IF NOT EXISTS violations (
   id VARCHAR PRIMARY KEY,
   latitude DOUBLE PRECISION NOT NULL,
   longitude DOUBLE PRECISION NOT NULL,
-  geom GEOGRAPHY(POINT, 4326),
   location TEXT,
   vehicle_number VARCHAR,
   vehicle_type VARCHAR,
@@ -55,7 +52,6 @@ CREATE TABLE IF NOT EXISTS violations (
   severity_weight FLOAT DEFAULT 1.0
 );
 
-CREATE INDEX IF NOT EXISTS idx_violations_geom ON violations USING GIST(geom);
 CREATE INDEX IF NOT EXISTS idx_violations_created ON violations(created_datetime);
 CREATE INDEX IF NOT EXISTS idx_violations_station ON violations(police_station);
 CREATE INDEX IF NOT EXISTS idx_violations_vehicle ON violations(vehicle_number);

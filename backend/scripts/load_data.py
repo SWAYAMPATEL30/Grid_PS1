@@ -141,19 +141,13 @@ def process_chunk(df: pd.DataFrame) -> pd.DataFrame:
     # ── Severity weight ──────────────────────────────────────────────────────
     df["severity_weight"] = df["_vt_list"].apply(severity_for_types)
 
-    # ── Geom (WKT for GEOGRAPHY) ─────────────────────────────────────────────
-    df["geom_wkt"] = df.apply(
-        lambda r: f"SRID=4326;POINT({r['longitude']} {r['latitude']})"
-        if pd.notna(r.get("latitude")) and pd.notna(r.get("longitude"))
-        else None,
-        axis=1,
-    )
+
 
     return df
 
 
 COLUMNS_ORDER = [
-    "id", "latitude", "longitude", "geom_wkt", "location", "vehicle_number",
+    "id", "latitude", "longitude", "location", "vehicle_number",
     "vehicle_type", "violation_types_pg", "offence_codes_pg",
     "created_datetime", "closed_datetime", "action_taken_timestamp",
     "device_id", "created_by_id", "center_code", "police_station",
@@ -165,7 +159,7 @@ COLUMNS_ORDER = [
 
 COPY_SQL = """
 COPY violations (
-  id, latitude, longitude, geom,
+  id, latitude, longitude,
   location, vehicle_number, vehicle_type,
   violation_types, offence_codes,
   created_datetime, closed_datetime, action_taken_timestamp,
@@ -177,7 +171,6 @@ COPY violations (
 ON CONFLICT (id) DO UPDATE SET
   latitude = EXCLUDED.latitude,
   longitude = EXCLUDED.longitude,
-  geom = EXCLUDED.geom,
   violation_types = EXCLUDED.violation_types,
   offence_codes = EXCLUDED.offence_codes,
   hour_of_day = EXCLUDED.hour_of_day,
@@ -191,7 +184,7 @@ ON CONFLICT (id) DO UPDATE SET
 # We'll use a staging table approach: COPY into temp, then INSERT ... ON CONFLICT.
 COPY_TEMP_SQL = """
 COPY _violations_staging (
-  id, latitude, longitude, geom,
+  id, latitude, longitude,
   location, vehicle_number, vehicle_type,
   violation_types, offence_codes,
   created_datetime, closed_datetime, action_taken_timestamp,
@@ -208,7 +201,6 @@ SELECT * FROM _violations_staging
 ON CONFLICT (id) DO UPDATE SET
   latitude = EXCLUDED.latitude,
   longitude = EXCLUDED.longitude,
-  geom = EXCLUDED.geom,
   violation_types = EXCLUDED.violation_types,
   offence_codes = EXCLUDED.offence_codes,
   hour_of_day = EXCLUDED.hour_of_day,

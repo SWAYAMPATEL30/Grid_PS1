@@ -79,7 +79,7 @@ async def update_location(
     await db.execute(
         text("""
             INSERT INTO officer_locations (id, officer_id, latitude, longitude, timestamp)
-            VALUES (:id, :oid, :lat, :lon, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :now)
+            VALUES (:id, :oid, :lat, :lon, :now)
         """),
         {"id": loc_id, "oid": current_user["id"], "lat": loc.latitude, "lon": loc.longitude, "now": now}
     )
@@ -118,7 +118,7 @@ async def get_proximity_alerts(
     # 1. Get officer's latest location
     loc_res = await db.execute(
         text("""
-            SELECT geom FROM officer_locations 
+            SELECT latitude, longitude FROM officer_locations 
             WHERE officer_id = :oid 
             ORDER BY timestamp DESC LIMIT 1
         """),
@@ -128,26 +128,26 @@ async def get_proximity_alerts(
     if not loc:
         return []
 
-    # 2. Find active hotspots (violations in last 3 hours grouped by junction) within 1km
     alerts_res = await db.execute(text("""
         WITH recent_violations AS (
-            SELECT junction_name, geom, severity_weight
+            SELECT junction_name, latitude, longitude, severity_weight
             FROM violations
             WHERE created_datetime > NOW() - INTERVAL '3 hours'
             AND junction_name IS NOT NULL
         ),
         hotspots AS (
             SELECT junction_name, 
-                   ST_Centroid(ST_Collect(geom::geometry))::geography as center_geom,
+                   AVG(latitude) as center_lat,
+                   AVG(longitude) as center_lon,
                    SUM(severity_weight) as total_severity
             FROM recent_violations
             GROUP BY junction_name
             HAVING SUM(severity_weight) > 10
         )
         SELECT junction_name, total_severity, 
-               ST_Distance(center_geom, :officer_geom) as distance_m
+               SQRT(POWER(center_lat - :officer_lat, 2) + POWER(center_lon - :officer_lon, 2)) * 111000 as distance_m
         FROM hotspots
-        WHERE ST_DWithin(center_geom, :officer_geom, 1000) -- within 1km
+        WHERE POWER(center_lat - :officer_lat, 2) + POWER(center_lon - :officer_lon, 2) < 0.000081
         ORDER BY distance_m ASC
     """), {"officer_lat": loc.latitude, "officer_lon": loc.longitude})
     
