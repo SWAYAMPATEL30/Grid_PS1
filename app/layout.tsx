@@ -5,6 +5,7 @@ import { UserProvider } from '@/context/user-context'
 import { ModeProvider } from '@/context/mode-context'
 import { FiltersProvider } from '@/context/filters-context'
 import { AuthProvider } from '@/context/auth-context'
+import { ThemeProvider } from 'next-themes'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({
@@ -28,8 +29,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark`} suppressHydrationWarning>
-      <body className="font-sans antialiased bg-slate-950 text-slate-100">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="parksight-theme">
         <AuthProvider>
         <UserProvider>
           <ModeProvider>
@@ -39,6 +41,7 @@ export default function RootLayout({
           </ModeProvider>
         </UserProvider>
         </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
