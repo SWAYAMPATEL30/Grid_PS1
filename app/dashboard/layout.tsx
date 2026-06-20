@@ -1,17 +1,13 @@
 'use client';
 
-import { useUser } from '@/context/user-context';
+import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Navbar } from '@/components/dashboard/navbar';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const { isAuthenticated } = useUser();
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -21,7 +17,11 @@ export default function DashboardLayout({
   }, [isAuthenticated, router]);
 
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-950">
+        <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+      </div>
+    );
   }
 
   return (
@@ -30,7 +30,7 @@ export default function DashboardLayout({
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
-          <div className="bg-slate-950">
+          <div className="bg-slate-950 min-h-full">
             {children}
           </div>
         </main>

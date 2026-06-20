@@ -10,3 +10,15 @@ numpy>=1.26.0
 scipy>=1.13.0
 python-multipart>=0.0.9
 httpx>=0.27.0
+# Auth
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt==3.2.0
+# File handling
+aiofiles>=23.2.1
+Pillow>=10.3.0
+# ML
+scikit-learn>=1.4.0
+joblib>=1.4.0
+# Email/notifications (mock)
+jinja2>=3.1.4

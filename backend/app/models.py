@@ -49,3 +49,84 @@ class Violation(Base):
         Index("idx_violations_station", "police_station"),
         Index("idx_violations_vehicle", "vehicle_number"),
     )
+
+
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(String, primary_key=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    phone = Column(String, nullable=True)
+    hashed_password = Column(String, nullable=False)
+    role = Column(String, nullable=False) # ADMIN, ANALYST, VERIFIER, POLICE_OFFICER, TOW_OPERATOR, CITIZEN, VEHICLE_OWNER
+    full_name = Column(String, nullable=False)
+    police_station = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), nullable=True)
+
+class OfficerSession(Base):
+    __tablename__ = 'officer_sessions'
+    id = Column(String, primary_key=True)
+    officer_id = Column(String, index=True, nullable=False)
+    clock_in = Column(DateTime(timezone=True), nullable=False)
+    clock_out = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, default=True)
+
+class OfficerLocation(Base):
+    __tablename__ = 'officer_locations'
+    id = Column(String, primary_key=True)
+    officer_id = Column(String, index=True, nullable=False)
+    latitude = Column(Double, nullable=False)
+    longitude = Column(Double, nullable=False)
+    geom = Column(Geography(geometry_type='POINT', srid=4326), nullable=True)
+    timestamp = Column(DateTime(timezone=True), nullable=False)
+
+class CitizenReport(Base):
+    __tablename__ = 'citizen_reports'
+    id = Column(String, primary_key=True)
+    citizen_id = Column(String, index=True, nullable=False)
+    photo_url = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    latitude = Column(Double, nullable=False)
+    longitude = Column(Double, nullable=False)
+    geom = Column(Geography(geometry_type='POINT', srid=4326), nullable=True)
+    status = Column(String, default='pending') # pending, verified, rejected, assigned, resolved
+    verifier_id = Column(String, nullable=True)
+    assigned_officer_id = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+
+class TowAssignment(Base):
+    __tablename__ = 'tow_assignments'
+    id = Column(String, primary_key=True)
+    violation_id = Column(String, index=True, nullable=False)
+    operator_id = Column(String, index=True, nullable=False)
+    status = Column(String, default='assigned') # assigned, in_progress, completed
+    assigned_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+class Notification(Base):
+    __tablename__ = 'notifications'
+    id = Column(String, primary_key=True)
+    recipient_id = Column(String, index=True, nullable=True)
+    vehicle_number = Column(String, index=True, nullable=True)
+    type = Column(String, nullable=False) # SMS, EMAIL, IN_APP
+    message = Column(Text, nullable=False)
+    status = Column(String, default='sent')
+    sent_at = Column(DateTime(timezone=True), nullable=False)
+
+class SpeedZone(Base):
+    __tablename__ = 'speed_zones'
+    id = Column(String, primary_key=True)
+    zone_name = Column(String, nullable=False)
+    latitude = Column(Double, nullable=False)
+    longitude = Column(Double, nullable=False)
+    geom = Column(Geography(geometry_type='POINT', srid=4326), nullable=True)
+    radius_m = Column(Float, nullable=False)
+    speed_limit_kmh = Column(Integer, nullable=False)
+
+class VehicleRegistry(Base):
+    __tablename__ = 'vehicle_registry'
+    vehicle_number = Column(String, primary_key=True)
+    owner_name = Column(String, nullable=False)
+    owner_phone = Column(String, nullable=False)
+    owner_email = Column(String, nullable=True)

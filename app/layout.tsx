@@ -4,6 +4,7 @@ import './globals.css'
 import { UserProvider } from '@/context/user-context'
 import { ModeProvider } from '@/context/mode-context'
 import { FiltersProvider } from '@/context/filters-context'
+import { AuthProvider } from '@/context/auth-context'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({
@@ -29,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark`} suppressHydrationWarning>
       <body className="font-sans antialiased bg-slate-950 text-slate-100">
+        <AuthProvider>
         <UserProvider>
           <ModeProvider>
             <FiltersProvider>
@@ -36,6 +38,7 @@ export default function RootLayout({
             </FiltersProvider>
           </ModeProvider>
         </UserProvider>
+        </AuthProvider>
       </body>
     </html>
   )

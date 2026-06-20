@@ -1,0 +1,39 @@
+{
+  "vehicle_types": [
+    "AUTORICKSHAW",
+    "CAR",
+    "MOTORCYCLE",
+    "TRUCK"
+  ],
+  "police_stations": [
+    "Ashok Nagar PS",
+    "Hebbal PS",
+    "Indiranagar PS",
+    "Koramangala PS",
+    "Marathahalli PS",
+    "Whitefield PS"
+  ],
+  "junctions": [
+    "Hebbal Flyover",
+    "KR Puram",
+    "MG Road",
+    "Marathahalli Bridge",
+    "NONE",
+    "Silk Board",
+    "Whitefield"
+  ],
+  "features_count": [
+    "hour",
+    "station_enc",
+    "is_weekend",
+    "month",
+    "day_of_week"
+  ],
+  "hotspot_features": [
+    "hour",
+    "vehicle_type_enc",
+    "junction_enc",
+    "avg_severity",
+    "day_of_week"
+  ]
+}
