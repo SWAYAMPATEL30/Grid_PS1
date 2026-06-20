@@ -1,0 +1,61 @@
+version: "3.9"
+
+# ── Production Docker Compose ──────────────────────────────────────────────────
+# Runs: gunicorn (4 uvicorn workers), Next.js production server
+# Usage: docker-compose -f docker-compose.prod.yml up --build -d
+
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    restart: always
+    environment:
+      POSTGRES_DB: parksight
+      POSTGRES_USER: parksight
+      POSTGRES_PASSWORD: parksight123
+    # Do NOT expose port 5432 to outside in production
+    expose:
+      - "5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parksight -d parksight"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  api:
+    build: ./backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://parksight:parksight123@db:5432/parksight
+      JWT_SECRET: parksight-super-secret-key-change-in-prod
+      ENVIRONMENT: production
+      # Restrict CORS to your frontend domain in production:
+      # ALLOWED_ORIGINS: https://yourdomain.com
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/data
+    # Uses gunicorn from Dockerfile CMD (no --reload)
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://api:8000
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+      NODE_ENV: production
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  uploads_data:

@@ -20,18 +20,27 @@ from app.routers import (
     reports, officers, notifications, speed, ml_predict,
 )
 
+# ── Environment ──────────────────────────────────────────────────────────────
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+IS_PROD = ENVIRONMENT == "production"
+
 app = FastAPI(
     title="ParkSight AI API",
     description="Multi-role traffic enforcement platform API",
     version="2.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    # Hide docs in production for security
+    docs_url=None if IS_PROD else "/docs",
+    redoc_url=None if IS_PROD else "/redoc",
 )
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
+# In production, restrict origins. In dev, allow all for convenience.
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()] if IS_PROD and _raw_origins else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

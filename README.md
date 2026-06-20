@@ -31,7 +31,7 @@ Trained `RandomForest` models to provide actionable intelligence:
 
 ---
 
-## 🚀 Setup & Installation
+## 🚀 Setup & Installation (Local Dev)
 
 Follow these instructions to pull, build, and run ParkSight AI on your local machine using Docker.
 
@@ -47,49 +47,85 @@ Ensure you have the following installed on your system:
 - **Docker** and **Docker Compose**
 
 ### 3. Build and Run via Docker Compose
-We use Docker to effortlessly spin up the PostgreSQL database, the FastAPI backend, and the Next.js frontend in one command.
-
 ```bash
 docker-compose up --build -d
 ```
-*Wait approximately 30-60 seconds for the database to initialize and the Next.js frontend to install its dependencies.*
+> Wait approximately 30-60 seconds for the database to initialize and the Next.js frontend to compile.
 
 ### 4. Run the Database Migrations
-Once the containers are running, you need to create the database tables. Run the following command:
-
 ```bash
 docker-compose exec api python scripts/run_migrations.py
 ```
 
 ### 5. Seed the Demo Data
-To log in, you will need the demo users and initial ML simulation data. Run the seeder script:
-
 ```bash
 docker-compose exec api python scripts/seed_demo.py
 ```
 
 ---
 
+## 🏭 Production Deployment
+
+For production, use the dedicated `docker-compose.prod.yml`:
+
+```bash
+# Build and launch all production containers (detached)
+docker-compose -f docker-compose.prod.yml up --build -d
+
+# Run migrations
+docker-compose -f docker-compose.prod.yml exec api python scripts/run_migrations.py
+
+# Seed demo users (first time only)
+docker-compose -f docker-compose.prod.yml exec api python scripts/seed_demo.py
+```
+
+**Key production differences vs. development:**
+| Feature | Dev | Production |
+|---|---|---|
+| API Server | `uvicorn --reload` | `gunicorn` with 4 uvicorn workers |
+| Frontend | `next dev` (HMR) | `next start` (pre-built, optimized) |
+| DB Port | Exposed `5432` | Internal only (not exposed) |
+| API Docs | `/docs` and `/redoc` | Hidden for security |
+| CORS | Wildcard `*` | Restricted to `ALLOWED_ORIGINS` env var |
+| Security headers | None | `X-Frame-Options`, `X-Content-Type-Options`, etc. |
+
+### Environment Variables (Production)
+
+To customize for your deployment, set these environment variables on the `api` service in `docker-compose.prod.yml`:
+
+```env
+DATABASE_URL=postgresql+asyncpg://user:password@db:5432/parksight
+JWT_SECRET=your-strong-secret-key-minimum-32-chars
+ENVIRONMENT=production
+ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+```
+
+---
+
 ## 🎮 How to Use
 
-Once the setup is complete, the platform is ready!
+1. Open **[http://localhost:3000/login](http://localhost:3000/login)**
+2. Click any **"Quick Demo Access"** button to log in as a specific role.
+3. Password for all demo accounts: `Password@123`
 
-1. Open your web browser and navigate to: **[http://localhost:3000/login](http://localhost:3000/login)**
-2. On the left side of the login screen, click any of the **"Quick Demo Access"** buttons to automatically log in as a specific role.
-3. The password for all demo accounts is: `Password@123`
-
-### Exploring the Portals:
-* **Citizen**: Try uploading a photo from the citizen portal.
-* **Verifier**: Log in as a Verifier and approve the photo you just uploaded.
-* **Officer**: Log in as an Officer, click "Clock In", and watch the live GPS tracker activate.
-* **Admin**: Check the "Live Map" in the sidebar to see the officer's real-time position.
+### Portal Overview:
+| Role | URL | Description |
+|---|---|---|
+| Admin / Analyst | `/dashboard/overview` | Full analytics dashboard + ML engine |
+| Police Officer | `/field` | Mobile GPS field ops app |
+| Verifier | `/verify` | Review and approve citizen reports |
+| Tow Operator | `/tow` | Active dispatch queue |
+| Citizen | `/citizen` | Submit illegal parking photos |
+| Vehicle Owner | `/owner` | Check fines, file appeals |
 
 ---
 
 ## 🛠️ Tech Stack
 
-* **Frontend**: Next.js 14, React, Tailwind CSS (Glassmorphism design system)
-* **Backend**: FastAPI, Python 3.11, SQLAlchemy, asyncpg
-* **Database**: PostgreSQL (with PostGIS support)
-* **Machine Learning**: Scikit-Learn (Random Forest Regression & Classification)
-* **Infrastructure**: Docker & Docker Compose
+* **Frontend**: Next.js 16, React 19, Tailwind CSS (Glassmorphism)
+* **Backend**: FastAPI, Python 3.11, SQLAlchemy (Async), asyncpg
+* **Database**: PostgreSQL 15 with PostGIS
+* **Machine Learning**: Scikit-Learn (Random Forest)
+* **Production Server**: Gunicorn + Uvicorn workers
+* **Infrastructure**: Docker, Docker Compose
+

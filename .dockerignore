@@ -1,0 +1,66 @@
+# Node / Next.js
+node_modules
+.next
+.pnpm-store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build artifacts
+dist
+build
+out
+
+# Test / coverage
+coverage
+.nyc_output
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+
+# Data files (large CSV)
+*.csv
+data/uploads/
+
+# Python
+__pycache__
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info
+.eggs
+*.egg
+venv/
+env/
+.venv/
+dist/
+build/
+backend/ml/*.pkl
+backend/ml/encoders.pkl
+backend/app/**/__pycache__
+
+# Git
+.git
+.gitignore
+.github
+
+# Docs
+*.md
+FEATURE_ROADMAP.md
+IMPLEMENTATION_SUMMARY.md
+STANDOUT_FEATURES.md
+walkthrough.md
+
+# Temp
+fix_dates.py

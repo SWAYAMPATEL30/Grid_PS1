@@ -1,3 +1,9 @@
+version: "3.9"
+
+# ── Development Docker Compose ─────────────────────────────────────────────────
+# Runs: uvicorn --reload (hot-reload), pnpm dev (fast refresh)
+# Usage: docker-compose up --build
+
 services:
   db:
     image: postgis/postgis:15-3.3
@@ -21,12 +27,15 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://parksight:parksight123@db:5432/parksight
+      JWT_SECRET: parksight-super-secret-key-change-in-prod
+      ENVIRONMENT: development
     depends_on:
       db:
         condition: service_healthy
     volumes:
       - ./data:/app/data
       - ./backend:/app
+    # Override Dockerfile CMD to enable hot reload for development
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
