@@ -1,74 +1,128 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Icon } from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { useEffect, useState, useCallback } from 'react';
+import {
+  APIProvider,
+  Map,
+  AdvancedMarker,
+  InfoWindow,
+  useMap,
+} from '@vis.gl/react-google-maps';
+import { parkSightApi } from '@/lib/api-client';
 
-const violationIcon = new Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
+const BENGALURU_CENTER = { lat: 12.9716, lng: 77.5946 };
+const MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '';
 
-interface Violation {
-  id: string;
-  licensePlate: string;
-  location: { lat: number; lng: number };
-  violationType: string;
+interface Zone {
+  name: string;
+  lat: number;
+  lng: number;
+  count: number;
+}
+
+function getMarkerColor(count: number, maxCount: number): string {
+  const pct = count / maxCount;
+  if (pct > 0.7) return '#ef4444'; // red
+  if (pct > 0.4) return '#f97316'; // orange
+  if (pct > 0.2) return '#eab308'; // yellow
+  return '#22c55e'; // green
+}
+
+function ZoneMarkers({ zones }: { zones: Zone[] }) {
+  const [selected, setSelected] = useState<Zone | null>(null);
+  const maxCount = Math.max(...zones.map(z => z.count), 1);
+
+  return (
+    <>
+      {zones.map((zone, i) => {
+        const color = getMarkerColor(zone.count, maxCount);
+        const size = 24 + Math.round((zone.count / maxCount) * 32);
+        return (
+          <AdvancedMarker
+            key={i}
+            position={{ lat: zone.lat, lng: zone.lng }}
+            onClick={() => setSelected(zone)}
+          >
+            <div
+              style={{
+                width: size,
+                height: size,
+                borderRadius: '50%',
+                background: color,
+                border: '2px solid white',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: Math.max(9, size / 3),
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'transform 0.15s',
+              }}
+              title={zone.name}
+            >
+              {zone.count > 999 ? `${(zone.count / 1000).toFixed(1)}k` : zone.count}
+            </div>
+          </AdvancedMarker>
+        );
+      })}
+      {selected && (
+        <InfoWindow
+          position={{ lat: selected.lat, lng: selected.lng }}
+          onCloseClick={() => setSelected(null)}
+        >
+          <div style={{ padding: '4px 8px', minWidth: 140 }}>
+            <p style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{selected.name}</p>
+            <p style={{ fontSize: 12, color: '#555' }}>
+              {selected.count.toLocaleString()} violations
+            </p>
+          </div>
+        </InfoWindow>
+      )}
+    </>
+  );
 }
 
 export function InteractiveMapPreview() {
-  const [violations, setViolations] = useState<Violation[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
-    // Generate random violations in SF area
-    const mockViolations: Violation[] = Array.from({ length: 15 }).map((_, i) => ({
-      id: `v-${i}`,
-      licensePlate: `ABC${1000 + i}`,
-      location: {
-        lat: 37.7749 + (Math.random() - 0.5) * 0.1,
-        lng: -122.4194 + (Math.random() - 0.5) * 0.1
-      },
-      violationType: ['expired_meter', 'no_parking', 'fire_zone'][Math.floor(Math.random() * 3)]
-    }));
-    setViolations(mockViolations);
+    parkSightApi.getHeatmapZones()
+      .then((fc: any) => {
+        if (fc?.features) {
+          setZones(
+            fc.features.map((f: any) => ({
+              name: f.properties.name,
+              lat: f.geometry.coordinates[1],
+              lng: f.geometry.coordinates[0],
+              count: f.properties.count,
+            }))
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  if (!mounted) {
-    return <div className="h-full bg-slate-800 animate-pulse" />;
+  if (loading) {
+    return <div className="h-full w-full bg-slate-800 animate-pulse rounded-lg" />;
   }
 
   return (
-    <MapContainer
-      center={[37.7749, -122.4194]}
-      zoom={13}
-      className="h-full w-full"
-      style={{ height: '100%' }}
-    >
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-      />
-      {violations.map(violation => (
-        <Marker
-          key={violation.id}
-          position={[violation.location.lat, violation.location.lng]}
-          icon={violationIcon}
-        >
-          <Popup>
-            <div className="text-sm">
-              <p className="font-semibold">{violation.licensePlate}</p>
-              <p className="text-xs text-gray-600">{violation.violationType}</p>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+    <APIProvider apiKey={MAPS_KEY}>
+      <Map
+        mapId="overview-map"
+        defaultCenter={zones.length > 0 ? { lat: zones[0].lat, lng: zones[0].lng } : BENGALURU_CENTER}
+        defaultZoom={11}
+        gestureHandling="cooperative"
+        disableDefaultUI={false}
+        style={{ width: '100%', height: '100%' }}
+        colorScheme="DARK"
+      >
+        <ZoneMarkers zones={zones} />
+      </Map>
+    </APIProvider>
   );
 }

@@ -122,8 +122,8 @@ def process_chunk(df: pd.DataFrame) -> pd.DataFrame:
 
     # ── IST derived columns ──────────────────────────────────────────────────
     created_ist = df["created_datetime"].dt.tz_convert(IST)
-    df["hour_of_day"] = created_ist.dt.hour
-    df["day_of_week"] = created_ist.dt.dayofweek  # 0=Mon
+    df["hour_of_day"] = created_ist.dt.hour.astype("Int64")
+    df["day_of_week"] = created_ist.dt.dayofweek.astype("Int64")  # 0=Mon
 
     # ── Resolution lag ───────────────────────────────────────────────────────
     if "action_taken_timestamp" in df.columns:
@@ -239,12 +239,23 @@ def prepare_copy_buffer(df: pd.DataFrame) -> io.StringIO:
         lambda b: "true" if b else "false"
     )
 
+    # center_code must be integer, not float like 9.0
+    if "center_code" in df.columns:
+        df["center_code"] = df["center_code"].apply(
+            lambda v: str(int(float(v))) if pd.notna(v) and v != "" else ""
+        )
+
     buf = io.StringIO()
     for _, row in df.iterrows():
         vals = []
         for col in COLUMNS_ORDER:
             val = row.get(col)
-            if val is None or (isinstance(val, float) and pd.isna(val)):
+            # Safely check for NA – works for bool, str, float, NaT, None
+            try:
+                is_na = pd.isna(val)
+            except (TypeError, ValueError):
+                is_na = False
+            if is_na:
                 vals.append("")
             elif isinstance(val, pd.Timestamp):
                 vals.append(val.isoformat())
@@ -262,7 +273,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv", required=True, help="Path to the violations CSV file")
     parser.add_argument("--truncate", action="store_true", help="Truncate table before loading")
-    parser.add_argument("--chunksize", type=int, default=50_000, help="Rows per chunk")
+    parser.add_argument("--chunksize", type=int, default=5_000, help="Rows per chunk")
     args = parser.parse_args()
 
     csv_path = Path(args.csv)

@@ -6,6 +6,12 @@ import { parkSightApi } from '@/lib/api-client';
 import { ZoneListItem, ZoneFeatureCollection } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { MapPin, Download, RotateCcw, Loader2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const HeatmapMap = dynamic(
+  () => import('@/components/maps/heatmap-map').then(m => m.HeatmapMap),
+  { loading: () => <div className="h-full bg-slate-800 animate-pulse" />, ssr: false }
+);
 
 export default function HeatmapPage() {
   const { selectedZones, setSelectedZones } = useFilters();
@@ -22,7 +28,7 @@ export default function HeatmapPage() {
           parkSightApi.getZonesList(),
           parkSightApi.getHeatmapZones()
         ]);
-        setZones(zoneList.slice(0, 12)); // Top 12 zones for buttons
+        setZones(zoneList.slice(0, 12));
         setZoneFeatures(featureCollection);
       } catch (error) {
         console.error('Failed to load map data:', error);
@@ -30,36 +36,30 @@ export default function HeatmapPage() {
         setLoading(false);
       }
     };
-
     loadData();
   }, []);
 
-  // Use the top 4 zones from features for the legend cards
   const topFeatures = [...(zoneFeatures?.features || [])]
     .sort((a, b) => b.properties.violation_count - a.properties.violation_count)
     .slice(0, 4);
 
   return (
     <div className="space-y-6 p-6">
-      {/* Page Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-100">Violation Heatmap</h1>
-          <p className="mt-2 text-slate-400">Interactive map with violation density, clusters, and enforcement zones</p>
+          <p className="mt-2 text-slate-400">Interactive Google Maps with real violation density — Bengaluru</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="border-slate-700 text-slate-300 hover:bg-slate-800">
-            <Download className="h-4 w-4 mr-2" />
-            Export
+            <Download className="h-4 w-4 mr-2" />Export
           </Button>
           <Button variant="outline" size="sm" className="border-slate-700 text-slate-300 hover:bg-slate-800" onClick={() => setActiveZone('all')}>
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset
+            <RotateCcw className="h-4 w-4 mr-2" />Reset
           </Button>
         </div>
       </div>
 
-      {/* Zone Selector */}
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
         <h3 className="mb-3 text-sm font-semibold text-slate-300">Enforcement Zones</h3>
         {loading && !zones.length ? (
@@ -76,8 +76,7 @@ export default function HeatmapPage() {
               onClick={() => setActiveZone('all')}
               className={activeZone === 'all' ? 'bg-blue-600 text-white' : 'border-slate-700 text-slate-300'}
             >
-              <MapPin className="h-4 w-4 mr-2" />
-              All Zones
+              <MapPin className="h-4 w-4 mr-2" />All Zones
             </Button>
             {zones.map(zone => (
               <Button
@@ -87,45 +86,28 @@ export default function HeatmapPage() {
                 onClick={() => setActiveZone(zone.zone_id)}
                 className={activeZone === zone.zone_id ? 'bg-blue-600 text-white' : 'border-slate-700 text-slate-300'}
               >
-                <MapPin className="h-4 w-4 mr-2" />
-                {zone.zone_name}
+                <MapPin className="h-4 w-4 mr-2" />{zone.zone_name}
               </Button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Map Container */}
       <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-        <div className="flex h-screen flex-col md:h-[600px]">
-          <div className="border-b border-slate-800 bg-slate-800/50 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-semibold text-slate-100 flex items-center gap-2">
-                  {loading && <Loader2 className="h-4 w-4 animate-spin text-blue-400" />}
-                  {activeZone === 'all' ? 'All Zones' : zones.find(z => z.zone_id === activeZone)?.zone_name || 'Zone'}
-                </h2>
-                <p className="text-xs text-slate-400 mt-1">Data powered by PostGIS • Displaying up to 50k violation points</p>
-              </div>
-            </div>
+        <div className="border-b border-slate-800 bg-slate-800/50 p-4">
+          <div>
+            <h2 className="font-semibold text-slate-100 flex items-center gap-2">
+              {loading && <Loader2 className="h-4 w-4 animate-spin text-blue-400" />}
+              Real-time Violation Density — Bengaluru
+            </h2>
+            <p className="text-xs text-slate-400 mt-1">Real GPS coordinates from Jan–May 2025 dataset</p>
           </div>
-
-          <div className="flex-1 bg-slate-950 flex items-center justify-center relative">
-            {loading && !zoneFeatures ? (
-              <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center z-10 backdrop-blur-sm">
-                <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
-              </div>
-            ) : null}
-            <div className="text-center">
-              <div className="text-6xl mb-4">🗺️</div>
-              <p className="text-slate-400">Leaflet map component will mount here</p>
-              <p className="text-xs text-slate-500 mt-2">Will consume /api/heatmap/points and /api/heatmap/zones</p>
-            </div>
-          </div>
+        </div>
+        <div className="h-[600px]">
+          <HeatmapMap />
         </div>
       </div>
 
-      {/* Zones Legend */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {loading && !topFeatures.length
           ? Array.from({ length: 4 }).map((_, i) => (
@@ -145,12 +127,8 @@ export default function HeatmapPage() {
                   <span className="font-semibold text-slate-100">{(f.properties.violation_count || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Density</span>
-                  <span className="font-semibold text-emerald-400">{(f.properties.density_per_km2 || 0).toFixed(1)} /km²</span>
-                </div>
-                <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-800">
-                  <span className="text-xs text-slate-500">Top Issue</span>
-                  <span className="text-xs font-medium bg-slate-800 text-slate-300 px-2 py-1 rounded truncate max-w-[120px]" title={f.properties.top_violation_type}>
+                  <span className="text-slate-400">Top Issue</span>
+                  <span className="font-semibold text-emerald-400 truncate max-w-[110px] text-right" title={f.properties.top_violation_type}>
                     {f.properties.top_violation_type || 'Unknown'}
                   </span>
                 </div>
