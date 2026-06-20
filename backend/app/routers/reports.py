@@ -41,8 +41,8 @@ async def submit_report(
 
     await db.execute(
         text("""
-            INSERT INTO citizen_reports (id, citizen_id, photo_url, description, latitude, longitude, geom, status, created_at)
-            VALUES (:id, :cid, :url, :desc, :lat, :lon, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), 'pending', :now)
+            INSERT INTO citizen_reports (id, citizen_id, photo_url, description, latitude, longitude, status, created_at)
+            VALUES (:id, :cid, :url, :desc, :lat, :lon, 'pending', :now)
         """),
         {
             "id": report_id,

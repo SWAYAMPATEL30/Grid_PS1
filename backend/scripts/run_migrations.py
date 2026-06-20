@@ -11,8 +11,6 @@ DATABASE_URL = os.getenv(
 SYNC_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
 
 DDL_PHASE2 = """
-CREATE EXTENSION IF NOT EXISTS postgis;
-
 CREATE TABLE IF NOT EXISTS users (
   id VARCHAR PRIMARY KEY,
   email VARCHAR UNIQUE NOT NULL,
@@ -38,7 +36,6 @@ CREATE TABLE IF NOT EXISTS officer_locations (
   officer_id VARCHAR NOT NULL,
   latitude DOUBLE PRECISION NOT NULL,
   longitude DOUBLE PRECISION NOT NULL,
-  geom GEOGRAPHY(POINT, 4326),
   timestamp TIMESTAMPTZ NOT NULL
 );
 
@@ -49,7 +46,6 @@ CREATE TABLE IF NOT EXISTS citizen_reports (
   description TEXT,
   latitude DOUBLE PRECISION NOT NULL,
   longitude DOUBLE PRECISION NOT NULL,
-  geom GEOGRAPHY(POINT, 4326),
   status VARCHAR DEFAULT 'pending',
   verifier_id VARCHAR,
   assigned_officer_id VARCHAR,
@@ -81,7 +77,6 @@ CREATE TABLE IF NOT EXISTS speed_zones (
   zone_name VARCHAR NOT NULL,
   latitude DOUBLE PRECISION NOT NULL,
   longitude DOUBLE PRECISION NOT NULL,
-  geom GEOGRAPHY(POINT, 4326),
   radius_m FLOAT NOT NULL,
   speed_limit_kmh INTEGER NOT NULL
 );

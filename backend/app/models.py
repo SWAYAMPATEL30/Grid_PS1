@@ -7,7 +7,7 @@ from sqlalchemy import (
     DateTime, Text, ARRAY, Index
 )
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
-from geoalchemy2 import Geography
+
 from app.database import Base
 
 
@@ -17,7 +17,7 @@ class Violation(Base):
     id = Column(String, primary_key=True)
     latitude = Column(Double, nullable=False)
     longitude = Column(Double, nullable=False)
-    geom = Column(Geography(geometry_type="POINT", srid=4326), nullable=True)
+    
     location = Column(Text, nullable=True)
     vehicle_number = Column(String, nullable=True)
     vehicle_type = Column(String, nullable=True)
@@ -77,7 +77,7 @@ class OfficerLocation(Base):
     officer_id = Column(String, index=True, nullable=False)
     latitude = Column(Double, nullable=False)
     longitude = Column(Double, nullable=False)
-    geom = Column(Geography(geometry_type='POINT', srid=4326), nullable=True)
+    
     timestamp = Column(DateTime(timezone=True), nullable=False)
 
 class CitizenReport(Base):
@@ -88,7 +88,7 @@ class CitizenReport(Base):
     description = Column(Text, nullable=True)
     latitude = Column(Double, nullable=False)
     longitude = Column(Double, nullable=False)
-    geom = Column(Geography(geometry_type='POINT', srid=4326), nullable=True)
+    
     status = Column(String, default='pending') # pending, verified, rejected, assigned, resolved
     verifier_id = Column(String, nullable=True)
     assigned_officer_id = Column(String, nullable=True)
@@ -120,7 +120,7 @@ class SpeedZone(Base):
     zone_name = Column(String, nullable=False)
     latitude = Column(Double, nullable=False)
     longitude = Column(Double, nullable=False)
-    geom = Column(Geography(geometry_type='POINT', srid=4326), nullable=True)
+    
     radius_m = Column(Float, nullable=False)
     speed_limit_kmh = Column(Integer, nullable=False)
 

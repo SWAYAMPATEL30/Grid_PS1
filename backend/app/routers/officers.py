@@ -78,7 +78,7 @@ async def update_location(
     
     await db.execute(
         text("""
-            INSERT INTO officer_locations (id, officer_id, latitude, longitude, geom, timestamp)
+            INSERT INTO officer_locations (id, officer_id, latitude, longitude, timestamp)
             VALUES (:id, :oid, :lat, :lon, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :now)
         """),
         {"id": loc_id, "oid": current_user["id"], "lat": loc.latitude, "lon": loc.longitude, "now": now}
@@ -149,7 +149,7 @@ async def get_proximity_alerts(
         FROM hotspots
         WHERE ST_DWithin(center_geom, :officer_geom, 1000) -- within 1km
         ORDER BY distance_m ASC
-    """), {"officer_geom": loc.geom})
+    """), {"officer_lat": loc.latitude, "officer_lon": loc.longitude})
     
     return [dict(r._mapping) for r in alerts_res.fetchall()]
 
