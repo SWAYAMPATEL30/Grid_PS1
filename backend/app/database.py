@@ -13,6 +13,10 @@ DATABASE_URL = os.getenv(
     "postgresql+asyncpg://parksight:parksight123@localhost:5432/parksight"
 )
 
+# Convert postgresql:// to postgresql+asyncpg:// for async support
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
@@ -40,3 +44,4 @@ async def get_db() -> AsyncSession:
             yield session
         finally:
             await session.close()
+
