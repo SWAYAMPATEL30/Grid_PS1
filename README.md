@@ -102,6 +102,94 @@ ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 
 ---
 
+## ☁️ Deploy to Vercel (Frontend) + Railway (Backend)
+
+> **Important:** Vercel hosts only the **Next.js frontend**. The FastAPI backend + PostgreSQL must be hosted separately. We recommend **Railway** (free tier available).
+
+---
+
+### Step 1 — Deploy Backend on Railway
+
+1. Go to **[railway.app](https://railway.app)** and sign in with GitHub.
+
+2. Click **"New Project"** → **"Deploy from GitHub repo"** → select `Grid_PS1`.
+
+3. Railway will auto-detect it as a monorepo. Click **"Add Service"** → **"GitHub Repo"** again, and this time set the **Root Directory** to `backend`.
+
+4. Add a **PostgreSQL** database:
+   - In your project dashboard → **"New"** → **"Database"** → **"PostgreSQL"**.
+   - Railway automatically injects `DATABASE_URL` into your service.
+
+5. Set **Environment Variables** on the `backend` service:
+   ```
+   ENVIRONMENT=production
+   JWT_SECRET=your-strong-random-secret-here
+   ALLOWED_ORIGINS=https://your-vercel-app.vercel.app
+   DATABASE_URL=<auto-injected by Railway PostgreSQL>
+   ```
+
+6. Set the **Start Command** in Railway settings:
+   ```
+   gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w 4 --bind 0.0.0.0:$PORT --timeout 120
+   ```
+
+7. After deploy, run migrations in the Railway console:
+   ```
+   python scripts/run_migrations.py
+   python scripts/seed_demo.py
+   ```
+
+8. Copy your Railway **public URL** (e.g. `https://grid-ps1-api.up.railway.app`) — you'll need it in Step 2.
+
+---
+
+### Step 2 — Deploy Frontend on Vercel
+
+1. Go to **[vercel.com](https://vercel.com)** and sign in with GitHub.
+
+2. Click **"Add New Project"** → import `SWAYAMPATEL30/Grid_PS1`.
+
+3. Vercel auto-detects Next.js. Leave the **Framework Preset** as `Next.js`.
+
+4. **Configure Build Settings** (Vercel should auto-fill from `vercel.json`):
+   - **Build Command**: `pnpm build`
+   - **Output Directory**: `.next`
+   - **Install Command**: `pnpm install`
+
+5. **Add Environment Variable**:
+   | Key | Value |
+   |---|---|
+   | `NEXT_PUBLIC_API_BASE_URL` | `https://your-railway-api-url.up.railway.app` |
+
+6. Click **"Deploy"** ✅
+
+7. Once deployed, copy your Vercel URL (e.g. `https://grid-ps1.vercel.app`) and go back to Railway → update `ALLOWED_ORIGINS` to match.
+
+---
+
+### Step 3 — Verify End-to-End
+
+Open your Vercel URL → navigate to `/login` → click a **Quick Demo Login** button → confirm your dashboard loads with real data from Railway.
+
+---
+
+### Deployment Architecture
+
+```
+Browser
+  │
+  ▼
+Vercel (Next.js Frontend)          ← Free tier, global CDN
+  │  HTTPS
+  ▼
+Railway (FastAPI + Gunicorn)       ← Free tier, 500hrs/month
+  │  asyncpg
+  ▼
+Railway PostgreSQL (PostGIS)       ← Persistent database
+```
+
+---
+
 ## 🎮 How to Use
 
 1. Open **[http://localhost:3000/login](http://localhost:3000/login)**
@@ -127,5 +215,4 @@ ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 * **Database**: PostgreSQL 15 with PostGIS
 * **Machine Learning**: Scikit-Learn (Random Forest)
 * **Production Server**: Gunicorn + Uvicorn workers
-* **Infrastructure**: Docker, Docker Compose
-
+* **Infrastructure**: Docker, Docker Compose, Vercel, Railway

@@ -17,8 +17,9 @@ const nextConfig = {
       },
     ],
   },
-  // Enable detailed build output
-  output: 'standalone',
+  // NOTE: 'standalone' output is for self-hosted Docker only.
+  // Vercel manages its own output — do NOT set output:'standalone' for Vercel.
+  // output: 'standalone',
   // Enable compression
   compress: true,
   // Security headers
