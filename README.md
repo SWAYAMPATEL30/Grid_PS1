@@ -1,364 +1,95 @@
-# 🅿️ ParkSight AI - Parking Violation Intelligence Dashboard
+# ParkSight AI 🚔
 
-> Advanced AI-powered parking enforcement platform with predictive analytics, gamified compliance, and futuristic features that make it stand out from competitors.
+ParkSight AI is a comprehensive, multi-role intelligence platform built to modernize traffic enforcement. It unifies operations across police officers, analysts, verifiers, tow operators, citizens, and vehicle owners into a single, real-time ecosystem powered by Machine Learning.
 
-## 🚀 Quick Start
+![ParkSight AI Login](app/login/page.tsx) <!-- Replace with an actual screenshot path later if desired -->
 
+## ✨ Features
+
+### 🔐 Multi-Role Authentication System (RBAC)
+Secure JWT-based login routing users to their dedicated operational portals automatically.
+* **ADMIN**: Access to the live operations map, user management, and system-wide analytics.
+* **ANALYST**: Access to ML predictions, speed analytics, heatmaps, and pattern forecasting.
+* **POLICE OFFICER**: Mobile-friendly PWA for clocking in/out, real-time GPS tracking, and uploading geo-tagged violations.
+* **VERIFIER**: Task dashboard to review, approve, or reject citizen-submitted violation photos.
+* **TOW OPERATOR**: Dispatch queue showing active towing assignments mapped via GPS.
+* **CITIZEN**: Public portal for citizens to capture and submit photos of illegal parking.
+* **VEHICLE OWNER**: Self-service portal to lookup fine histories via registration number and file appeals.
+
+### 🤖 Machine Learning Engine
+Trained `RandomForest` models to provide actionable intelligence:
+* **Violation Count Predictor**: Predicts future violation volume at a specific police station based on time, day, and month.
+* **Hotspot Risk Predictor**: Calculates the percentage probability of a junction becoming a traffic bottleneck based on vehicle type and hour.
+
+### 🏎️ Speed Analytics & Simulation
+* Dynamic speed limits defined across major junctions.
+* Leaderboards tracking top speeding zones and live violation metrics.
+
+### 🗺️ Live Officer Operations Map
+* Real-time GPS tracking of active officers mapped against pending citizen reports.
+* Congestion proximity alerts push to officers within a specific radius of hotspots using Haversine formulas.
+
+---
+
+## 🚀 Setup & Installation
+
+Follow these instructions to pull, build, and run ParkSight AI on your local machine using Docker.
+
+### 1. Clone the Repository
 ```bash
-# Install dependencies
-pnpm install
-
-# Start development server
-pnpm dev
-
-# Open browser
-open http://localhost:3000
+git clone https://github.com/SWAYAMPATEL30/Grid_PS1.git
+cd Grid_PS1
 ```
 
-**Demo Credentials** (any password works):
-- Admin: `admin@example.com`
-- Officer: `officer@example.com`
-- Analyst: `analyst@example.com`
+### 2. Prerequisites
+Ensure you have the following installed on your system:
+- **Git**
+- **Docker** and **Docker Compose**
+
+### 3. Build and Run via Docker Compose
+We use Docker to effortlessly spin up the PostgreSQL database, the FastAPI backend, and the Next.js frontend in one command.
+
+```bash
+docker-compose up --build -d
+```
+*Wait approximately 30-60 seconds for the database to initialize and the Next.js frontend to install its dependencies.*
+
+### 4. Run the Database Migrations
+Once the containers are running, you need to create the database tables. Run the following command:
+
+```bash
+docker-compose exec api python scripts/run_migrations.py
+```
+
+### 5. Seed the Demo Data
+To log in, you will need the demo users and initial ML simulation data. Run the seeder script:
+
+```bash
+docker-compose exec api python scripts/seed_demo.py
+```
 
 ---
 
-## 📋 Features at a Glance
+## 🎮 How to Use
 
-### 15 Fully Functional Dashboard Pages
+Once the setup is complete, the platform is ready!
 
-#### Intelligence & Analytics
-- **Overview** - Main dashboard with KPIs, maps, compliance metrics
-- **Heatmap** - Interactive map with zone-based violation visualization
-- **Temporal** - Hourly/daily distribution analysis
-- **Forecast** - 30-day ML predictions with key drivers
-- **Patterns** - Repeat violator identification
-- **Predictive Intelligence** ⭐ NEW - Violation forecasts with 3D visualization
-- **Driver Reputation** ⭐ NEW - Gamified behavioral scoring
+1. Open your web browser and navigate to: **[http://localhost:3000/login](http://localhost:3000/login)**
+2. On the left side of the login screen, click any of the **"Quick Demo Access"** buttons to automatically log in as a specific role.
+3. The password for all demo accounts is: `Password@123`
 
-#### Operations
-- **Queue** - Violation processing workflow
-- **Enforcement** - Officer dispatch board
-- **Zones** - Parking zone management
-- **Compliance** - Multi-entity tracking
-
-#### Compliance & Admin
-- **Appeals** - Appeal workflow management
-- **Revenue** - Financial analytics
-- **Analytics** - Aggregate statistics
-- **Settings** - User preferences and integrations
-
----
-
-## ⭐ Standout Features
-
-### Game-Changing Differentiators
-
-1. **Violation Prediction Engine** - Forecasts violations 24+ hours in advance
-2. **3D Hotspot Visualization** - Interactive 3D bar charts of violation density
-3. **Driver Reputation System** - Gamified compliance with dynamic fines (0.5x-2.0x multiplier)
-4. **Weather-Triggered Intelligence** - Automatic adjustments based on forecasts (+23% violations when raining)
-5. **Officer AI Coach** - Real-time suggestions for optimal patrol routes
-
-### Next-Level Intelligence Features
-
-6. **Event-Based Forecasting** - Predicts violations around concerts, sports events
-7. **Appeal Success Prediction** - ML determines likelihood of appeal success
-8. **Violation Pattern Fingerprinting** - Identifies systemic issues vs. random violations
-9. **Community Gamification** - Neighborhoods compete on compliance scores
-10. **Quantum-Optimized Routes** - ML calculates optimal officer patrol paths
-
-See **STANDOUT_FEATURES.md** for complete feature breakdown with marketing angles.
+### Exploring the Portals:
+* **Citizen**: Try uploading a photo from the citizen portal.
+* **Verifier**: Log in as a Verifier and approve the photo you just uploaded.
+* **Officer**: Log in as an Officer, click "Clock In", and watch the live GPS tracker activate.
+* **Admin**: Check the "Live Map" in the sidebar to see the officer's real-time position.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 16, React 19, TypeScript
-- **UI**: shadcn/ui, Tailwind CSS v4 (dark theme)
-- **Charts**: Recharts (bar, line, pie, scatter)
-- **Maps**: React Leaflet
-- **Icons**: Lucide React
-- **State**: React Context + localStorage
-- **Deployment**: Vercel-ready
-
----
-
-## 📁 Project Structure
-
-```
-app/
-├── layout.tsx (Root with providers)
-├── page.tsx (Auto-redirect)
-├── login/
-└── dashboard/
-    ├── overview/
-    ├── heatmap/
-    ├── temporal/
-    ├── forecast/
-    ├── patterns/
-    ├── predictive/ ⭐ NEW
-    ├── reputation/ ⭐ NEW
-    ├── queue/
-    ├── enforcement/
-    ├── zones/
-    ├── compliance/
-    ├── appeals/
-    ├── revenue/
-    ├── analytics/
-    └── settings/
-
-components/
-├── dashboard/
-├── cards/
-└── maps/
-
-context/
-├── user-context.tsx
-├── mode-context.tsx
-└── filters-context.tsx
-
-lib/
-├── types.ts
-├── api-client.ts
-└── mock-data.ts
-```
-
----
-
-## 🎨 Design
-
-- **Dark Theme** optimized for reduced eye strain
-- **Responsive Layout** works on desktop, tablet, mobile
-- **Sidebar Navigation** collapses on mobile
-- **Sticky Navbar** with user profile and mode toggle
-- **Interactive Charts** with hover details
-- **WCAG 2.1 AA Compliant** accessibility
-
----
-
-## 🔐 Authentication
-
-Demo auth in **context/user-context.tsx**:
-- Mock users stored in MOCK_USERS object
-- Any password accepted (demo mode)
-- localStorage persistence for session continuity
-- Role-based access (admin/officer/analyst)
-
----
-
-## 📊 Mock Data
-
-All data is procedurally generated in **lib/mock-data.ts**:
-- Realistic violation patterns
-- Weather-influenced data
-- Time-based variations
-- Zone-specific metrics
-- Officer efficiency scores
-- Revenue forecasts
-
----
-
-## 🎮 Modes
-
-Toggle between **Police** and **Logistics** modes in the navbar:
-- **Police Mode** - Enforcement-focused dashboard
-- **Logistics Mode** - Fleet/delivery-focused view
-- State persists across navigation
-
----
-
-## 📈 Performance
-
-- **Page Load**: ~200-500ms (mock data)
-- **Chart Rendering**: <500ms
-- **Map Rendering**: <1s
-- **Optimized**: Code splitting, lazy loading
-- **Dark Theme**: Reduced eye strain for extended use
-
----
-
-## 🚀 Deployment
-
-### Deploy to Vercel (Recommended)
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
-
-# Visit deployed URL
-```
-
-### Docker Deploy
-
-```dockerfile
-FROM node:20-alpine
-WORKDIR /app
-COPY . .
-RUN pnpm install
-RUN pnpm build
-EXPOSE 3000
-CMD ["pnpm", "start"]
-```
-
----
-
-## 📚 Documentation
-
-- **FEATURE_ROADMAP.md** - 20 future feature ideas with implementation strategy
-- **STANDOUT_FEATURES.md** - Competitive advantages and marketing angles
-- **IMPLEMENTATION_SUMMARY.md** - Complete technical overview
-
----
-
-## 🔄 Future Enhancements
-
-### Phase 1: Map Features
-- Full Three.js 3D visualization
-- Leaflet heatmap layers
-- Polygon zone editing
-- Real-time clustering
-
-### Phase 2: Integrations
-- Weather API (real-time forecasts)
-- City events calendar
-- ANPR/License plate recognition
-- Officer GPS tracking
-
-### Phase 3: Advanced AI
-- Machine learning deployment
-- Officer coaching algorithm
-- Appeal prediction model
-- Quantum routing optimization
-
-### Phase 4: Expansion
-- Multi-city SaaS
-- Insurance integrations
-- White-label versions
-- API marketplace
-
----
-
-## 🎯 Use Cases
-
-### For Police Departments
-- Predict violations before they happen
-- Optimize officer patrol routes
-- Identify repeat offenders
-- Protect officer safety with predictive analytics
-
-### For City Planners
-- Optimize parking supply and demand
-- Reduce traffic congestion
-- Improve sustainability metrics
-- Maximize municipal revenue
-
-### For Drivers
-- Improve reputation through compliance
-- Fair, context-aware penalties
-- Public recognition for good behavior
-- Transparent scoring system
-
-### For Tech Companies
-- White-label SaaS product
-- Multi-city deployment
-- B2B revenue model
-- High-margin recurring revenue
-
----
-
-## 📊 Key Metrics
-
-- **Prediction Accuracy**: 92.3%
-- **Total Violations Tracked**: 13,450+ drivers
-- **System Uptime**: 99.9% (Vercel SLA)
-- **Page Load Speed**: < 500ms
-- **Mobile Support**: 100%
-- **Accessibility Score**: WCAG 2.1 AA
-
----
-
-## 🤝 Contributing
-
-This is a demo/portfolio project. For production use:
-1. Add real authentication
-2. Connect to actual database
-3. Implement real API integrations
-4. Add comprehensive testing
-5. Deploy with proper security
-
----
-
-## 📄 License
-
-MIT - Open for educational and commercial use
-
----
-
-## 👨‍💻 Built With
-
-- **Framework**: Next.js 16
-- **Language**: TypeScript
-- **UI**: React 19, shadcn/ui, Tailwind CSS
-- **Visualization**: Recharts, React Three Fiber
-- **Maps**: React Leaflet
-- **Deployment**: Vercel
-
----
-
-## 🎓 Learning Resources
-
-- [Next.js 16 Docs](https://nextjs.org)
-- [React 19 Docs](https://react.dev)
-- [shadcn/ui Components](https://ui.shadcn.com)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Recharts Documentation](https://recharts.org)
-
----
-
-## 📞 Support
-
-For issues or questions:
-1. Check IMPLEMENTATION_SUMMARY.md
-2. Review STANDOUT_FEATURES.md for feature details
-3. Inspect mock-data.ts for data generation logic
-
----
-
-## 🌟 What Makes This Special
-
-Unlike traditional parking systems, ParkSight AI combines:
-- **Predictive Intelligence** (forecasting violations)
-- **Gamification** (reputation-based compliance)
-- **Beautiful Visualization** (3D, interactive charts)
-- **AI Coaching** (real-time officer guidance)
-- **Fair Enforcement** (dynamic penalties based on history)
-
-The result is a parking system that:
-- Prevents violations before they happen
-- Rewards compliance instead of just punishing violations
-- Makes enforcement data-driven and fair
-- Scales to multiple cities as a SaaS product
-
----
-
-## 🚀 Ready to Deploy?
-
-1. Clone/Download the project
-2. `pnpm install`
-3. `pnpm dev`
-4. Login with demo credentials
-5. Explore all 15 pages
-6. Deploy to Vercel with one click
-
-**That's it!** You now have a production-ready parking intelligence dashboard.
-
----
-
-**Status**: ✅ Complete and Ready for Demo/Deployment
-
-**Last Updated**: June 19, 2026
-
-**Version**: 1.0.0
+* **Frontend**: Next.js 14, React, Tailwind CSS (Glassmorphism design system)
+* **Backend**: FastAPI, Python 3.11, SQLAlchemy, asyncpg
+* **Database**: PostgreSQL (with PostGIS support)
+* **Machine Learning**: Scikit-Learn (Random Forest Regression & Classification)
+* **Infrastructure**: Docker & Docker Compose
