@@ -34,13 +34,22 @@ app = FastAPI(
 )
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
-# In production, restrict origins. In dev, allow all for convenience.
 _raw_origins = os.getenv("ALLOWED_ORIGINS", "")
-ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()] if IS_PROD and _raw_origins else ["*"]
+# In production, use allowed origins. If none provided, allow railway subdomains dynamically.
+if _raw_origins:
+    ALLOWED_ORIGINS = [o.strip().rstrip('/') for o in _raw_origins.split(",") if o.strip()]
+else:
+    # Safe default for Railway deployments
+    ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "https://respectful-fascination-production.up.railway.app",
+        "https://respectful-fascination-production-afbf.up.railway.app"
+    ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.railway\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
