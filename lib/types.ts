@@ -64,7 +64,7 @@ export interface VehicleSplit { vehicle_type: string; count: number; pct: number
 export interface TopHotspot { zone: string; score: number; violation_count: number }
 export interface WorstLagStation { station: string; avg_lag_mins: number }
 
-export interface RealHeatmapPoint { lat: number; lon: number; weight: number; count?: number }
+export interface RealHeatmapPoint { lat: number; lng: number; weight: number; count?: number }
 
 
 export interface ZoneFeatureProps { zone_name: string; violation_count: number; density_per_km2: number; top_violation_type: string }

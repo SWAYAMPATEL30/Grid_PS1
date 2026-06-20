@@ -55,8 +55,8 @@ export function HeatmapMap({ filters }: Props) {
     try {
       const data: RealHeatmapPoint[] = await parkSightApi.getHeatmapPoints(filters || {});
       const validPoints = data
-        .filter(p => p.lat != null && p.lon != null)
-        .map(p => ({ lat: p.lat, lng: p.lon, weight: p.weight, count: p.count ?? 1 }));
+        .filter(p => p.lat != null && p.lng != null)
+        .map(p => ({ lat: p.lat, lng: p.lng, weight: p.weight, count: p.count ?? 1 }));
       setPoints(validPoints);
     } catch (e) {
       console.error('Failed to load heatmap data:', e);
