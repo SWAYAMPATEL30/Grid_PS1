@@ -131,13 +131,13 @@ export default function HeatmapPage() {
           ? Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-32 bg-slate-800 animate-pulse rounded-xl" />
             ))
-          : topFeatures.map(f => (
-            <div key={f.properties.zone_name} className="rounded-xl border border-slate-800 bg-slate-900 p-4 relative overflow-hidden">
+          : topFeatures.map((f, index) => (
+            <div key={f.id || f.properties?.zone_name || index} className="rounded-xl border border-slate-800 bg-slate-900 p-4 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-3 opacity-10">
                 <MapPin className="h-16 w-16" />
               </div>
-              <h3 className="font-semibold text-slate-100 truncate pr-8" title={f.properties.zone_name}>
-                {f.properties.zone_name}
+              <h3 className="font-semibold text-slate-100 truncate pr-8" title={f.properties?.zone_name}>
+                {f.properties?.zone_name || 'Unknown Zone'}
               </h3>
               <div className="mt-3 space-y-2 text-sm">
                 <div className="flex justify-between">
