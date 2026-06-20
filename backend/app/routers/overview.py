@@ -13,6 +13,7 @@ from app.schemas import (
     OverviewKPIs, KPIDeltas, HourlyBucket,
     VehicleSplit, TopHotspot, WorstLagStation,
 )
+from app.ml.predictor import ml
 
 router = APIRouter(prefix="/api/overview", tags=["overview"])
 
@@ -124,10 +125,43 @@ async def get_vehicle_split(db: AsyncSession = Depends(get_db)):
 
 @router.get("/top-hotspots", response_model=list[TopHotspot])
 async def get_top_hotspots(limit: int = Query(5, ge=1, le=50), db: AsyncSession = Depends(get_db)):
-    result = await db.execute(text("SELECT COALESCE(junction_name, police_station, 'Unknown') AS zone, COUNT(*) AS cnt FROM violations WHERE police_station IS NOT NULL OR junction_name IS NOT NULL GROUP BY zone HAVING COUNT(*) > 5 ORDER BY cnt DESC LIMIT :limit"), {"limit": limit})
+    result = await db.execute(
+        text("""
+        SELECT
+            COALESCE(police_station, 'Unknown') AS zone,
+            COUNT(*) AS cnt,
+            AVG(severity_weight) AS avg_sev,
+            AVG(resolution_lag_mins) AS avg_lag,
+            AVG(latitude) AS lat,
+            AVG(longitude) AS lon,
+            BOOL_OR(is_junction) AS has_junction,
+            MODE() WITHIN GROUP (ORDER BY vehicle_type) AS common_vehicle
+        FROM violations
+        WHERE police_station IS NOT NULL
+        GROUP BY police_station
+        HAVING COUNT(*) > 5
+        ORDER BY cnt DESC
+        LIMIT :limit
+        """),
+        {"limit": limit * 3},
+    )
     rows = result.fetchall()
-    max_cnt = max((r.cnt for r in rows), default=1)
-    return [TopHotspot(zone=r.zone, score=round((r.cnt / max_cnt) * 100, 2), violation_count=int(r.cnt)) for r in rows]
+    scored = []
+    for r in rows:
+        ml_score = ml.predict_score(
+            hour_of_day=9, day_of_week=1, month=3,
+            lat=float(r.lat or 12.97), lon=float(r.lon or 77.59),
+            density_500m=float(min(int(r.cnt), 100)),
+            is_junction=bool(r.has_junction or False),
+            police_station=str(r.zone),
+            primary_violation="WRONG PARKING",
+            num_violation_types=1,
+            vehicle_type=str(r.common_vehicle or "CAR"),
+            resolution_lag_mins=float(r.avg_lag or 60.0),
+        )
+        scored.append(TopHotspot(zone=str(r.zone), score=round(ml_score, 2), violation_count=int(r.cnt)))
+    scored.sort(key=lambda h: h.score, reverse=True)
+    return scored[:limit]
 
 @router.get("/worst-lag-stations", response_model=list[WorstLagStation])
 async def get_worst_lag_stations(limit: int = Query(10, ge=1, le=50), db: AsyncSession = Depends(get_db)):
