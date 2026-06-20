@@ -10,7 +10,7 @@ from app.schemas import HourDayCell, DailyTrend, WeekdayWeekend
 router = APIRouter(prefix="/api/temporal", tags=["temporal"])
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-def _dr(fd, td): return (fd or "2025-01-01"), (td or "2025-05-31")
+def _dr(fd, td): return (fd or "2023-11-01"), (td or "2024-04-30")
 
 @router.get("/heatmap-matrix", response_model=list[HourDayCell])
 async def get_heatmap_matrix(from_date: Optional[str] = Query(None), to_date: Optional[str] = Query(None), db: AsyncSession = Depends(get_db)):

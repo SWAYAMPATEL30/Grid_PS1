@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/congestion", tags=["congestion"])
 
 @router.get("/score", response_model=CongestionScore)
 async def get_congestion_score(zone_id: str = Query(...), from_date: Optional[str] = Query(None), to_date: Optional[str] = Query(None), db: AsyncSession = Depends(get_db)):
-    fd = from_date or "2025-01-01"; td = to_date or "2025-05-31"
+    fd = from_date or "2023-11-01"; td = to_date or "2024-04-30"
     result = await db.execute(text("SELECT COUNT(*) AS cnt, AVG(severity_weight) AS avg_sev, AVG(resolution_lag_mins) AS avg_lag FROM violations WHERE police_station = :zone AND created_datetime BETWEEN CAST(:fd AS timestamp) AND CAST(:td AS timestamp)"), {"zone": zone_id, "fd": datetime.fromisoformat(fd), "td": datetime.fromisoformat(td + " 23:59:59")})
     row = result.fetchone()
     cnt = int(row.cnt or 0); avg_sev = float(row.avg_sev or 1.0); avg_lag = float(row.avg_lag or 0)
