@@ -8,6 +8,7 @@ if [ -z "$DATABASE_URL" ]; then
     echo "WARNING: DATABASE_URL is not set! Skipping database migrations. The app will likely fail when trying to connect to the DB."
 else
     echo "Running database migrations..."
+    python scripts/create_tables.py || echo "create_tables failed, continuing..."
     python scripts/run_migrations.py || echo "Migrations failed, but continuing..."
     
     echo "Seeding demo users..."
