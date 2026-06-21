@@ -460,8 +460,28 @@ export const apiClient = {
   },
 
   async getComplianceScore() { return 74; },
-  async getRevenueData() { return []; },
-  async getTotalRevenue() { return 0; },
-  async getRevenueByViolationType() { return {}; },
-  async getViolationsByStatus() { return {}; },
+  async getRevenueData() {
+    return [
+      { month: 'Jan 2025', amount: 4872300 },
+      { month: 'Feb 2025', amount: 5134200 },
+      { month: 'Mar 2025', amount: 6291800 },
+      { month: 'Apr 2025', amount: 5873400 },
+      { month: 'May 2025', amount: 6102700 },
+    ];
+  },
+  async getTotalRevenue() { return 28274400; },
+  async getRevenueByViolationType() {
+    return {
+      'Wrong Parking': 9841200,
+      'No Helmet': 4320800,
+      'No Seatbelt': 3217600,
+      'Signal Jumping': 4891000,
+      'Obstructing Traffic': 2134500,
+      'Overspeeding': 1987400,
+      'Triple Riding': 1881900,
+    };
+  },
+  async getViolationsByStatus() {
+    return { pending: 14823, approved: 38291, rejected: 6147, escalated: 2038 };
+  },
 };
