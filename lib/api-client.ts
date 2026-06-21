@@ -51,8 +51,15 @@ async function apiFetch<T>(
     if (path === '/api/overview/vehicle-split') return [ { vehicle_type: 'CAR', count: 5000, pct: 45 }, { vehicle_type: 'BIKE', count: 3000, pct: 25 }, { vehicle_type: 'TRUCK', count: 2000, pct: 15 }, { vehicle_type: 'AUTO', count: 1000, pct: 10 }, { vehicle_type: 'BUS', count: 450, pct: 5 } ] as any;
     if (path.startsWith('/api/overview/top-hotspots')) return Array.from({length: 5}, (_, i) => ({ zone: `Zone ${i+1}`, score: 80 - i*5, violation_count: 500 - i*50 })) as any;
     if (path === '/api/overview/worst-lag-stations') return Array.from({length: 5}, (_, i) => ({ station: `Station ${i+1}`, avg_lag_mins: 120 - i*10 })) as any;
-    if (path.startsWith('/api/heatmap/points')) return Array.from({length: 100}, () => ({ lat: 12.97 + (Math.random()-0.5)*0.1, lon: 77.59 + (Math.random()-0.5)*0.1, weight: Math.random()*100 })) as any;
-    if (path === '/api/heatmap/zones') return { type: 'FeatureCollection', features: [] } as any;
+    if (path.startsWith('/api/heatmap/points')) return Array.from({length: 100}, () => ({ lat: 12.97 + (Math.random()-0.5)*0.1, lng: 77.59 + (Math.random()-0.5)*0.1, weight: Math.random()*100 })) as any;
+    if (path === '/api/heatmap/zones') return { 
+      type: 'FeatureCollection', 
+      features: Array.from({length: 15}, (_, i) => ({
+        type: 'Feature',
+        properties: { name: `Police Station ${i+1}`, count: 500 - i*30 },
+        geometry: { type: 'Point', coordinates: [77.59 + (Math.random()-0.5)*0.1, 12.97 + (Math.random()-0.5)*0.1] }
+      }))
+    } as any;
     if (path.startsWith('/api/queue/zones')) return Array.from({length: 10}, (_, i) => ({ rank: i+1, zone: `Zone ${i+1}`, junction_name: `Junction ${i+1}`, score: 90-i*2, open_violations: 20-i, peak_hour: 10+i%8, recommended_action: 'Dispatch Officer', lat: 12.97, lon: 77.59 })) as any;
     if (path.startsWith('/api/temporal/heatmap-matrix')) {
       const data = [];
@@ -67,8 +74,8 @@ async function apiFetch<T>(
     if (path === '/api/kpis/stations') return Array.from({length: 5}, (_, i) => ({ station: `Station ${i+1}`, total_cases: 500, approval_rate: 0.85, avg_lag: 45, correction_rate: 0.1 })) as any;
     if (path === '/api/zones/list') return Array.from({length: 10}, (_, i) => ({ zone_id: `Z${i+1}`, zone_name: `Zone ${i+1}`, lat: 12.97, lon: 77.59 })) as any;
     if (path.startsWith('/api/congestion/score')) return { zone: 'Test', score: 50, breakdown: { violation_density: 10, avg_open_duration_mins: 5, road_weight: 1, junction_flag: false }, label: 'Medium', history: [] } as any;
-    if (path === '/api/congestion/all-zones') return [] as any;
-    if (path.startsWith('/api/congestion/vehicle-impact')) return [] as any;
+    if (path === '/api/congestion/all-zones') return Array.from({length: 10}, (_, i) => ({ zone_id: `Station ${i+1}`, score: 85-i*5, label: 'High', violation_count: 500-i*40, avg_lag_mins: 45, lat: 12.97, lon: 77.59 })) as any;
+    if (path.startsWith('/api/congestion/vehicle-impact')) return [ { vehicle_type: 'CAR', impact_score: 80, violation_count: 500 }, { vehicle_type: 'BIKE', impact_score: 50, violation_count: 300 } ] as any;
     if (path === '/api/congestion/peak-windows') return { zones: [], matrix: [] } as any;
     if (path.startsWith('/api/queue/zone-detail')) return { zone_id: 'Z1', chart_data: [], recent_violations: [] } as any;
     if (path.startsWith('/api/queue/assign')) return { success: true } as any;
