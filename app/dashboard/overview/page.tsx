@@ -109,8 +109,10 @@ export default function OverviewPage() {
         />
         <KPICard
           title="Avg Resolution Lag"
-          value={loading ? '—' : `${kpis?.avg_resolution_lag_mins?.toFixed(0) ?? 0} min`}
-          subtitle="Action taken time"
+          value={loading ? '—' : kpis && kpis.avg_resolution_lag_mins > 120
+            ? `${(kpis.avg_resolution_lag_mins / 60).toFixed(1)} hrs`
+            : `${kpis?.avg_resolution_lag_mins?.toFixed(0) ?? 0} min`}
+          subtitle="Avg time from violation to validation"
           icon={Clock}
           color="bg-purple-500"
         />

@@ -64,8 +64,8 @@ async def get_kpis(
     )
     prev_total = int((prev_res.scalar() or 0))
     violations_pct = round(((total - prev_total) / max(prev_total, 1)) * 100, 2)
-    # Average validation time is very high (around 96 hours). Let's base risk on 24 hours (1440 mins)
-    delivery_risk = min(100.0, round((avg_lag / 1440.0) * 100, 2))
+    # Avg lag is ~96 hours. Cap at 7 days (10080 min) = 100% risk
+    delivery_risk = min(100.0, round((avg_lag / 10080.0) * 100, 2))
 
     return OverviewKPIs(
         total_violations=total,

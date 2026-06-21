@@ -19,7 +19,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report, mean_absolute_error
 
 MODEL_DIR = os.path.dirname(__file__)
-CSV_PATH = os.path.join(os.path.dirname(MODEL_DIR), "data", "violations.csv")
+CSV_PATH = os.path.join(os.path.dirname(os.path.dirname(MODEL_DIR)), "data", "violations.csv")
 
 
 def load_data(path: str) -> pd.DataFrame:
@@ -50,7 +50,10 @@ def preprocess(df: pd.DataFrame):
     df["junction_enc"] = le_junction.fit_transform(df["junction_name"].fillna("NONE"))
 
     df["is_junction"] = df["junction_name"].notna().astype(int)
-    df["severity_weight"] = pd.to_numeric(df.get("severity_weight", 1.0), errors="coerce").fillna(1.0)
+    if "severity_weight" in df.columns:
+        df["severity_weight"] = pd.to_numeric(df["severity_weight"], errors="coerce").fillna(1.0)
+    else:
+        df["severity_weight"] = 1.0
 
     encoders = {
         "vehicle_type": le_vehicle,
@@ -119,14 +122,14 @@ def train():
     reg = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
     reg.fit(X_tr, y_tr)
     mae = mean_absolute_error(y_te, reg.predict(X_te))
-    print(f"✅ Violation Count Model — MAE: {mae:.2f}")
+    print(f"Violation Count Model - MAE: {mae:.2f}")
 
     # ── Model 2: Hotspot Risk Classifier ──────────────────────────────────────
     X_hs, y_hs = build_hotspot_features(df)
     X_tr2, X_te2, y_tr2, y_te2 = train_test_split(X_hs, y_hs, test_size=0.2, random_state=42)
     clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1, class_weight="balanced")
     clf.fit(X_tr2, y_tr2)
-    print("✅ Hotspot Classifier Report:")
+    print("Hotspot Classifier Report:")
     print(classification_report(y_te2, clf.predict(X_te2)))
 
     # ── Save models and encoders ───────────────────────────────────────────────
@@ -145,7 +148,7 @@ def train():
     with open(os.path.join(MODEL_DIR, "model_meta.json"), "w") as f:
         json.dump({k: (list(v) if isinstance(v, set) else v) for k, v in meta.items()}, f, indent=2)
 
-    print("✅ Models saved to", MODEL_DIR)
+    print("Models saved to", MODEL_DIR)
 
 
 if __name__ == "__main__":

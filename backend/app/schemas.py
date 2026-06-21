@@ -187,18 +187,31 @@ class ScitaJunction(BaseModel):
 
 class OfficerKPI(BaseModel):
     officer_id: str
-    total_violations: int
-    avg_severity: float
+    station: Optional[str] = "Unknown"
+    cases_filed: int = 0
+    approval_rate: float = 0.0
+    avg_close_lag_mins: float = 0.0
+    correction_rate: float = 0.0
+    zones_covered: int = 1
+    composite_score: float = 0.0
+    # Legacy fields
+    total_violations: Optional[int] = None
+    avg_severity: Optional[float] = None
     avg_lag_mins: Optional[float] = None
-    scita_sent: int
+    scita_sent: Optional[int] = None
 
 class StationKPI(BaseModel):
     station: str
-    total_violations: int
-    avg_severity: float
+    total_cases: int = 0
+    approval_rate: float = 0.0
+    avg_lag: float = 0.0
+    correction_rate: float = 0.0
+    # Legacy fields
+    total_violations: Optional[int] = None
+    avg_severity: Optional[float] = None
     avg_lag_mins: Optional[float] = None
-    approval_rate: float
-    scita_rate: float
+    approval_rate_pct: Optional[float] = None
+    scita_rate: Optional[float] = None
 
 
 # ─── Zones ──────────────────────────────────────────────────────────────────

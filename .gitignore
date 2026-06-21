@@ -20,3 +20,9 @@ data/
 backend/__pycache__
 backend/venv
 backend/.venv
+
+# Large ML model files (exceed GitHub's 100MB limit — use Git LFS or store separately)
+backend/ml/*.pkl
+backend/ml/hotspot_risk_model.pkl
+backend/ml/violation_count_model.pkl
+backend/ml/encoders.pkl

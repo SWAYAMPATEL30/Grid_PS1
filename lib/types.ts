@@ -89,8 +89,8 @@ export interface WeekdayWeekend { weekday: HourCount[]; weekend: HourCount[] }
 
 export interface ForecastHotspot {
   zone: string; predicted_count: number; confidence: number; trend: string;
-  lat: number; lon: number;
-  feature_importance: { hour_weight: number; historical_avg: number; day_of_week: number };
+  lat?: number; lon?: number; risk_level?: string;
+  feature_importance?: { hour_weight: number; historical_avg: number; day_of_week: number };
 }
 export interface ForecastTimelinePoint { datetime: string; predicted_count: number; lower_bound: number; upper_bound: number }
 
@@ -109,4 +109,4 @@ export interface ScitaJunction { junction_name: string; lat: number; lon: number
 export interface OfficerKPI { officer_id: string; station: string; cases_filed: number; approval_rate: number; avg_close_lag_mins: number; correction_rate: number; zones_covered: number; composite_score: number }
 export interface StationKPI { station: string; total_cases: number; approval_rate: number; avg_lag: number; correction_rate: number }
 
-export interface ZoneListItem { zone_id: string; zone_name: string; lat: number; lon: number }
+export interface ZoneListItem { zone_id: string; zone_name: string; total_violations: number; avg_severity: number; lat?: number; lng?: number }

@@ -39,6 +39,37 @@ async def get_heatmap_points(
 
 @router.get("/zones")
 async def get_heatmap_zones(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(text("SELECT police_station AS name, AVG(latitude) AS lat, AVG(longitude) AS lng, COUNT(*) AS cnt FROM violations WHERE police_station IS NOT NULL AND latitude IS NOT NULL GROUP BY police_station ORDER BY cnt DESC"))
+    result = await db.execute(text("""
+        SELECT
+            police_station AS name,
+            AVG(latitude) AS lat,
+            AVG(longitude) AS lng,
+            COUNT(*) AS cnt,
+            MODE() WITHIN GROUP (ORDER BY
+                CASE WHEN violation_types IS NOT NULL AND array_length(violation_types, 1) > 0
+                     THEN violation_types[1]
+                     ELSE 'WRONG PARKING' END
+            ) AS top_type
+        FROM violations
+        WHERE police_station IS NOT NULL AND latitude IS NOT NULL
+        GROUP BY police_station
+        ORDER BY cnt DESC
+    """))
     rows = result.fetchall()
-    return {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"name": r.name, "count": int(r.cnt)}, "geometry": {"type": "Point", "coordinates": [float(r.lng), float(r.lat)]}} for r in rows]}
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "name": r.name,
+                    "zone_name": r.name,
+                    "count": int(r.cnt),
+                    "violation_count": int(r.cnt),
+                    "top_violation_type": r.top_type or "WRONG PARKING",
+                },
+                "geometry": {"type": "Point", "coordinates": [float(r.lng), float(r.lat)]}
+            }
+            for r in rows
+        ]
+    }
