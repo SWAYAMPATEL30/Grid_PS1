@@ -18,7 +18,7 @@ from app.ml.predictor import ml
 router = APIRouter(prefix="/api/overview", tags=["overview"])
 
 def _date_range(from_date: Optional[str], to_date: Optional[str]) -> tuple[str, str]:
-    return (from_date or "2023-11-01"), (to_date or "2024-04-30")
+    return (from_date or "2020-01-01"), (to_date or "2026-12-31")
 
 @router.get("/kpis", response_model=OverviewKPIs)
 async def get_kpis(

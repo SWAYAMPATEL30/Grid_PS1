@@ -16,8 +16,8 @@ async def get_heatmap_points(
     day_type: Optional[str] = Query(None), vehicle_types: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
-    fd = from_date or "2023-11-01"
-    td = to_date or "2024-04-30"
+    fd = from_date or "2020-01-01"
+    td = to_date or "2026-12-31"
     clauses = ["created_datetime BETWEEN CAST(:fd AS timestamp) AND CAST(:td AS timestamp)", "latitude IS NOT NULL"]
     params: dict = {"fd": datetime.fromisoformat(fd), "td": datetime.fromisoformat(td + " 23:59:59")}
     if hour_min is not None:

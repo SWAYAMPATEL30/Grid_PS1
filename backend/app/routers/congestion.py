@@ -21,8 +21,8 @@ async def get_congestion_score(
     to_date: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
-    fd = from_date or "2025-01-01"
-    td = to_date or "2025-05-31"
+    fd = from_date or "2020-01-01"
+    td = to_date or "2026-12-31"
 
     result = await db.execute(
         text("""
@@ -73,7 +73,7 @@ async def get_congestion_score(
         sent_to_scita=False,
     )
 
-    return CongestionScore(
+    return CongestionScore( 
         zone_id=zone_id,
         score=round(ml_score, 2),
         violation_count=cnt,
