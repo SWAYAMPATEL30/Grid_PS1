@@ -26,11 +26,12 @@ export default function TowPage() {
       const res = await fetch(`${API_BASE}/api/tow/my-assignments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) throw new Error("API error");
       const data = await res.json();
-      if (Array.isArray(data)) {
-        if (data.length === 0) throw new Error("Empty array");
-        setAssignments(data);
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error("Empty or invalid array");
       }
+      setAssignments(data);
     } catch {
       // Fallback demo data if endpoint not yet seeded
       setAssignments([
