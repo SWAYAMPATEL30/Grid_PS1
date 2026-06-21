@@ -10,7 +10,7 @@ load_dotenv()
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+asyncpg://parksight:parksight123@localhost:5432/parksight"
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 )
 
 # Railway auto-injects DATABASE_URL starting with postgresql:// or postgres://
