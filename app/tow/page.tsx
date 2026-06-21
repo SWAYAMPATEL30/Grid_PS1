@@ -27,7 +27,10 @@ export default function TowPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (Array.isArray(data)) setAssignments(data);
+      if (Array.isArray(data)) {
+        if (data.length === 0) throw new Error("Empty array");
+        setAssignments(data);
+      }
     } catch {
       // Fallback demo data if endpoint not yet seeded
       setAssignments([
