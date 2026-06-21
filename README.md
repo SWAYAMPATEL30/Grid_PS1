@@ -1,39 +1,68 @@
-# ParkSight AI 🚔
+# 🚔 ParkSight AI: Flipkart Gridlock 2.0
 
-ParkSight AI is a comprehensive, multi-role intelligence platform built to modernize traffic enforcement. It unifies operations across police officers, analysts, verifiers, tow operators, citizens, and vehicle owners into a single, real-time ecosystem powered by Machine Learning.
+> **Transforming City Traffic Enforcement from Reactive to Predictive.**
 
-![ParkSight AI Login](app/login/page.tsx) <!-- Replace with an actual screenshot path later if desired -->
-
-## ✨ Features
-
-### 🔐 Multi-Role Authentication System (RBAC)
-Secure JWT-based login routing users to their dedicated operational portals automatically.
-* **ADMIN**: Access to the live operations map, user management, and system-wide analytics.
-* **ANALYST**: Access to ML predictions, speed analytics, heatmaps, and pattern forecasting.
-* **POLICE OFFICER**: Mobile-friendly PWA for clocking in/out, real-time GPS tracking, and uploading geo-tagged violations.
-* **VERIFIER**: Task dashboard to review, approve, or reject citizen-submitted violation photos.
-* **TOW OPERATOR**: Dispatch queue showing active towing assignments mapped via GPS.
-* **CITIZEN**: Public portal for citizens to capture and submit photos of illegal parking.
-* **VEHICLE OWNER**: Self-service portal to lookup fine histories via registration number and file appeals.
-
-### 🤖 Machine Learning Engine
-Trained `RandomForest` models to provide actionable intelligence:
-* **Violation Count Predictor**: Predicts future violation volume at a specific police station based on time, day, and month.
-* **Hotspot Risk Predictor**: Calculates the percentage probability of a junction becoming a traffic bottleneck based on vehicle type and hour.
-
-### 🏎️ Speed Analytics & Simulation
-* Dynamic speed limits defined across major junctions.
-* Leaderboards tracking top speeding zones and live violation metrics.
-
-### 🗺️ Live Officer Operations Map
-* Real-time GPS tracking of active officers mapped against pending citizen reports.
-* Congestion proximity alerts push to officers within a specific radius of hotspots using Haversine formulas.
+🚀 **Live Interactive Demo:** [https://respectful-fascination-production-afbf.up.railway.app](https://respectful-fascination-production-afbf.up.railway.app)
 
 ---
 
-## 🚀 Setup & Installation (Local Dev)
+## 🚦 The Gridlock Crisis (Problem Statement)
+**Operational Challenge:** On-street illegal parking and spillover parking near commercial areas, metro stations, and events systematically choke carriageways and vital intersections.
 
-Follow these instructions to pull, build, and run ParkSight AI on your local machine using Docker.
+**Why It’s Hard Today:**
+* Enforcement is entirely **patrol-based and reactive**. Police respond only *after* gridlock has formed.
+* There is **no heatmap** visualizing the correlation between parking violations and their cascading impact on traffic flow.
+* It is **difficult to objectively prioritize** which enforcement zones need the most urgent attention.
+
+**Our Core Question:** *How can AI-driven parking intelligence detect illegal parking hotspots and quantify their impact on traffic flow to enable targeted enforcement?*
+
+---
+
+## 💡 The Solution: ParkSight AI
+ParkSight AI is a unified, multi-role intelligence platform. By leveraging an advanced Machine Learning Prediction Engine, we process historical data, vehicle typologies, and temporal patterns to forecast gridlock *before* it happens. We give city administrators interactive 3D heatmaps, precise hotspot probabilities, and completely digitized enforcement pipelines.
+
+---
+
+## 🔑 A 7-Role Ecosystem
+Gridlock is an ecosystem problem. ParkSight AI solves it with a 7-role operational ecosystem accessed via a secure JWT-based RBAC authentication system.
+
+### 🧠 The Intelligence Core
+1. **System Admin:** The God-view dashboard. Track live, real-time GPS coordinates of active officers, overall city violation heatmaps, and live revenue collection.
+2. **Data Analyst:** Access to the XGBoost Machine Learning Engine. Features include a 120-day forecasting model, time-of-day temporal analysis, pattern decoding, and exact hotspot risk prediction.
+
+### 🛡️ The Operations Loop
+3. **SCITA Verifier:** The human firewall. A specialized dashboard where verifiers manually review and approve AI-flagged violations (from CCTV or citizens) before a challan is issued.
+4. **Police Officer (`/field`):** A mobile-first Field App with built-in OCR scanning. Officers can read license plates with their cameras, issue smart e-challans instantly, and request tows with one tap.
+5. **Tow Operator (`/tow`):** An Uber-style dispatch queue. Tow truck drivers receive exact GPS coordinates and Google Maps routing to clear blocking vehicles effortlessly.
+
+### 🏙️ Public Engagement
+6. **Citizen Portal (`/citizen`):** Empowers the public to crowd-source violations by capturing geo-tagged photos. Gamified with a **Driver Reputation Score**—good reporting builds your score, repeated offenses lower it.
+7. **Vehicle Owner Portal (`/owner`):** A transparent gateway for vehicle owners to view photographic evidence of their challans and pay fines instantly via digital integrations.
+
+---
+
+## 🤖 The Technology Stack
+A state-of-the-art architecture built for speed, scale, and intelligence.
+
+* **Frontend:** Next.js 16, React 19, Tailwind CSS (Custom Dark Glassmorphism), Leaflet & Google Maps API integrations.
+* **Backend:** FastAPI, Python 3.11, SQLAlchemy (Async), asyncpg.
+* **Database:** PostgreSQL 15 with PostGIS.
+* **Machine Learning:** Scikit-Learn (Random Forest & XGBoost classifiers trained on 18 distinct features).
+* **Deployment:** Fully dockerized, optimized with Gunicorn + Uvicorn workers, hosted on Railway.
+
+---
+
+## 🎮 How to Use The Live Demo
+1. Open the [Live App](https://respectful-fascination-production-afbf.up.railway.app).
+2. On the login screen, click any of the **"Quick Demo Access"** role buttons (Admin, Tow Op, Officer, etc.).
+3. Password for all demo accounts defaults to: `Password@123`.
+4. Click **Login** and instantly experience how the UI completely morphs for that specific role!
+
+---
+
+## 🚀 Local Setup & Installation
+
+If you wish to run ParkSight AI locally on your machine, follow these steps:
 
 ### 1. Clone the Repository
 ```bash
@@ -41,268 +70,19 @@ git clone https://github.com/SWAYAMPATEL30/Grid_PS1.git
 cd Grid_PS1
 ```
 
-### 2. Prerequisites
-Ensure you have the following installed on your system:
-- **Git**
-- **Docker** and **Docker Compose**
-
-### 3. Build and Run via Docker Compose
+### 2. Build and Run via Docker Compose
+Ensure you have Docker and Docker Compose installed.
 ```bash
 docker-compose up --build -d
 ```
-> Wait approximately 30-60 seconds for the database to initialize and the Next.js frontend to compile.
+> *Wait approximately 30-60 seconds for the PostgreSQL database to initialize and the Next.js frontend to compile.*
 
-### 4. Run the Database Migrations
+### 3. Run the Database Migrations & Seed Demo Data
+Run these commands in your terminal to populate the database with mock violations and ML models:
 ```bash
 docker-compose exec api python scripts/run_migrations.py
-```
-
-### 5. Seed the Demo Data
-```bash
 docker-compose exec api python scripts/seed_demo.py
 ```
 
----
-
-## 🏭 Production Deployment
-
-For production, use the dedicated `docker-compose.prod.yml`:
-
-```bash
-# Build and launch all production containers (detached)
-docker-compose -f docker-compose.prod.yml up --build -d
-
-# Run migrations
-docker-compose -f docker-compose.prod.yml exec api python scripts/run_migrations.py
-
-# Seed demo users (first time only)
-docker-compose -f docker-compose.prod.yml exec api python scripts/seed_demo.py
-```
-
-**Key production differences vs. development:**
-| Feature | Dev | Production |
-|---|---|---|
-| API Server | `uvicorn --reload` | `gunicorn` with 4 uvicorn workers |
-| Frontend | `next dev` (HMR) | `next start` (pre-built, optimized) |
-| DB Port | Exposed `5432` | Internal only (not exposed) |
-| API Docs | `/docs` and `/redoc` | Hidden for security |
-| CORS | Wildcard `*` | Restricted to `ALLOWED_ORIGINS` env var |
-| Security headers | None | `X-Frame-Options`, `X-Content-Type-Options`, etc. |
-
-### Environment Variables (Production)
-
-To customize for your deployment, set these environment variables on the `api` service in `docker-compose.prod.yml`:
-
-```env
-DATABASE_URL=postgresql+asyncpg://user:password@db:5432/parksight
-JWT_SECRET=your-strong-secret-key-minimum-32-chars
-ENVIRONMENT=production
-ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-```
-
----
-
-## ☁️ Cloud Deployment (Full Stack)
-
-The **entire stack** (Frontend + Backend + PostgreSQL) can be hosted on either **Railway** or **Render** from the same GitHub repo — no split needed.
-
----
-
-### 🚂 Option A — Deploy Everything on Railway
-
-Railway supports multiple services from one repository.
-
-**Step 1: Create the project**
-1. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo** → select `Grid_PS1`
-
-**Step 2: Add PostgreSQL**
-- Click **"+ New"** → **"Database"** → **"Add PostgreSQL"**
-- Railway auto-injects `DATABASE_URL` into all services
-
-**Step 3: Deploy the Backend**
-- Click **"+ New"** → **"GitHub Repo"** → `Grid_PS1`
-- In the service settings → **Root Directory** → set to `backend`
-- **Start Command:**
-  ```
-  gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w 4 --bind 0.0.0.0:$PORT --timeout 120
-  ```
-- **Environment Variables:**
-  ```
-  ENVIRONMENT=production
-  JWT_SECRET=<generate a strong random string>
-  ALLOWED_ORIGINS=https://<your-frontend>.up.railway.app
-  ```
-- Go to **Deploy** tab → click **Deploy** → once running, open the **Shell** tab and run:
-  ```bash
-  python scripts/run_migrations.py
-  python scripts/seed_demo.py
-  ```
-- Copy the backend's **public URL** (e.g. `https://grid-ps1-api.up.railway.app`)
-
-**Step 4: Deploy the Frontend**
-- Click **"+ New"** → **"GitHub Repo"** → `Grid_PS1`
-- In service settings → **Root Directory** → leave as `.` (root, uses `Dockerfile`)
-- **Environment Variables:**
-  ```
-  NEXT_PUBLIC_API_BASE_URL=https://<your-backend>.up.railway.app
-  ```
-- Click **Deploy** ✅
-
-**Step 5: Update CORS**
-- Go back to the backend service → update `ALLOWED_ORIGINS` with the frontend Railway URL.
-
----
-
-### 🎨 Option B — Deploy Everything on Render (with render.yaml)
-
-Render supports **Infrastructure as Code** via `render.yaml` — this repo already has it configured!
-
-**Step 1: Connect repo**
-1. Go to [render.com](https://render.com) → **New** → **Blueprint** → connect GitHub → select `Grid_PS1`
-2. Render reads `render.yaml` and **auto-creates all 3 services**: database, backend, frontend.
-
-**Step 2: Configure URLs**
-After the first deploy, get the backend URL (e.g. `https://parksight-api.onrender.com`) and:
-- Update `NEXT_PUBLIC_API_BASE_URL` on the **frontend** service
-- Update `ALLOWED_ORIGINS` on the **backend** service
-
-**Step 3: Run migrations**
-In the Render dashboard → backend service → **Shell**:
-```bash
-python scripts/run_migrations.py
-python scripts/seed_demo.py
-```
-
-> [!WARNING]
-> **Render free tier:** Web services **sleep after 15 minutes** of inactivity (cold start ~30s). Upgrade to Starter ($7/mo) to keep services always-on.
-
----
-
-### Platform Comparison
-
-| Feature | Railway | Render | Vercel + Railway |
-|---|---|---|---|
-| Full stack in one place | ✅ | ✅ | ❌ (split) |
-| Free tier | $5 credit/mo | Yes (sleeps) | Yes |
-| Always-on free | ✅ | ❌ | ✅ |
-| PostgreSQL included | ✅ | ✅ | ✅ (Railway) |
-| Docker support | ✅ | ✅ | ❌ frontend only |
-| IaC config file | `railway.toml` | `render.yaml` ✅ | `vercel.json` |
-| Best for | Full stack | Full stack | Frontend-only |
-
-> **Recommendation:** Use **Railway** for the simplest experience. Use **Render** if you want true IaC with `render.yaml` auto-deployment.
-
----
-
-
-
----
-
-### Step 1 — Deploy Backend on Railway
-
-1. Go to **[railway.app](https://railway.app)** and sign in with GitHub.
-
-2. Click **"New Project"** → **"Deploy from GitHub repo"** → select `Grid_PS1`.
-
-3. Railway will auto-detect it as a monorepo. Click **"Add Service"** → **"GitHub Repo"** again, and this time set the **Root Directory** to `backend`.
-
-4. Add a **PostgreSQL** database:
-   - In your project dashboard → **"New"** → **"Database"** → **"PostgreSQL"**.
-   - Railway automatically injects `DATABASE_URL` into your service.
-
-5. Set **Environment Variables** on the `backend` service:
-   ```
-   ENVIRONMENT=production
-   JWT_SECRET=your-strong-random-secret-here
-   ALLOWED_ORIGINS=https://your-vercel-app.vercel.app
-   DATABASE_URL=<auto-injected by Railway PostgreSQL>
-   ```
-
-6. Set the **Start Command** in Railway settings:
-   ```
-   gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w 4 --bind 0.0.0.0:$PORT --timeout 120
-   ```
-
-7. After deploy, run migrations in the Railway console:
-   ```
-   python scripts/run_migrations.py
-   python scripts/seed_demo.py
-   ```
-
-8. Copy your Railway **public URL** (e.g. `https://grid-ps1-api.up.railway.app`) — you'll need it in Step 2.
-
----
-
-### Step 2 — Deploy Frontend on Vercel
-
-1. Go to **[vercel.com](https://vercel.com)** and sign in with GitHub.
-
-2. Click **"Add New Project"** → import `SWAYAMPATEL30/Grid_PS1`.
-
-3. Vercel auto-detects Next.js. Leave the **Framework Preset** as `Next.js`.
-
-4. **Configure Build Settings** (Vercel should auto-fill from `vercel.json`):
-   - **Build Command**: `pnpm build`
-   - **Output Directory**: `.next`
-   - **Install Command**: `pnpm install`
-
-5. **Add Environment Variable**:
-   | Key | Value |
-   |---|---|
-   | `NEXT_PUBLIC_API_BASE_URL` | `https://your-railway-api-url.up.railway.app` |
-
-6. Click **"Deploy"** ✅
-
-7. Once deployed, copy your Vercel URL (e.g. `https://grid-ps1.vercel.app`) and go back to Railway → update `ALLOWED_ORIGINS` to match.
-
----
-
-### Step 3 — Verify End-to-End
-
-Open your Vercel URL → navigate to `/login` → click a **Quick Demo Login** button → confirm your dashboard loads with real data from Railway.
-
----
-
-### Deployment Architecture
-
-```
-Browser
-  │
-  ▼
-Vercel (Next.js Frontend)          ← Free tier, global CDN
-  │  HTTPS
-  ▼
-Railway (FastAPI + Gunicorn)       ← Free tier, 500hrs/month
-  │  asyncpg
-  ▼
-Railway PostgreSQL (PostGIS)       ← Persistent database
-```
-
----
-
-## 🎮 How to Use
-
-1. Open **[http://localhost:3000/login](http://localhost:3000/login)**
-2. Click any **"Quick Demo Access"** button to log in as a specific role.
-3. Password for all demo accounts: `Password@123`
-
-### Portal Overview:
-| Role | URL | Description |
-|---|---|---|
-| Admin / Analyst | `/dashboard/overview` | Full analytics dashboard + ML engine |
-| Police Officer | `/field` | Mobile GPS field ops app |
-| Verifier | `/verify` | Review and approve citizen reports |
-| Tow Operator | `/tow` | Active dispatch queue |
-| Citizen | `/citizen` | Submit illegal parking photos |
-| Vehicle Owner | `/owner` | Check fines, file appeals |
-
----
-
-## 🛠️ Tech Stack
-
-* **Frontend**: Next.js 16, React 19, Tailwind CSS (Glassmorphism)
-* **Backend**: FastAPI, Python 3.11, SQLAlchemy (Async), asyncpg
-* **Database**: PostgreSQL 15 with PostGIS
-* **Machine Learning**: Scikit-Learn (Random Forest)
-* **Production Server**: Gunicorn + Uvicorn workers
-* **Infrastructure**: Docker, Docker Compose, Vercel, Railway
+### 4. Access Localhost
+Go to [http://localhost:3000](http://localhost:3000) and use the same Quick Demo Access buttons!
