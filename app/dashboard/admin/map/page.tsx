@@ -4,6 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
 import { parkSightApi } from '@/lib/api-client';
+import dynamic from 'next/dynamic';
+
+const LiveMap = dynamic(
+  () => import('@/components/maps/live-map').then(m => m.LiveMap),
+  { loading: () => <div className="h-full bg-slate-800 animate-pulse" />, ssr: false }
+);
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
@@ -117,50 +123,10 @@ export default function AdminMapPage() {
         </div>
       </div>
 
-      {/* Map with animated dots */}
+      {/* Map with interactive Leaflet */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden mb-5">
-        <div className="h-[400px] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative flex items-center justify-center">
-          <div className="absolute inset-0 opacity-10" style={{
-            backgroundImage: 'linear-gradient(#3b82f6 1px, transparent 1px), linear-gradient(90deg, #3b82f6 1px, transparent 1px)',
-            backgroundSize: '40px 40px'
-          }} />
-
-          {/* Central label */}
-          <div className="absolute inset-0 flex items-center justify-center text-center z-10 pointer-events-none">
-            <div>
-              <p className="text-5xl mb-2">🗺️</p>
-              <p className="text-slate-300 font-semibold">Bengaluru, Karnataka</p>
-              <p className="text-slate-500 text-sm mt-1">Live officer positions update every 30s</p>
-            </div>
-          </div>
-
-          {/* Officer dots */}
-          {officers.slice(0, 8).map((o, i) => (
-            <div key={o.id || i}
-              className="absolute z-20 group cursor-pointer"
-              style={{ left: `${15 + i * 9}%`, top: `${25 + (i % 4) * 16}%` }}
-              title={`${o.full_name} — ${o.police_station}`}
-            >
-              <div className="w-4 h-4 bg-green-400 rounded-full border-2 border-green-200 animate-pulse" />
-              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 hidden group-hover:block bg-slate-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap border border-slate-700 z-30">
-                {o.full_name}
-              </div>
-            </div>
-          ))}
-
-          {/* Hotspot dots */}
-          {hotspots.slice(0, 8).map((h, i) => (
-            <div key={h.zone}
-              className="absolute z-20 group cursor-pointer"
-              style={{ left: `${20 + i * 8}%`, top: `${15 + (i % 3) * 25}%` }}
-              title={`${h.zone}: score ${h.score?.toFixed(0)}`}
-            >
-              <div className={`w-3 h-3 rounded-full border-2 ${h.score > 75 ? 'bg-red-400 border-red-200' : h.score > 50 ? 'bg-orange-400 border-orange-200' : 'bg-amber-400 border-amber-200'}`} />
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 hidden group-hover:block bg-slate-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap border border-slate-700 z-30">
-                {h.zone} — {h.violation_count?.toLocaleString()} violations
-              </div>
-            </div>
-          ))}
+        <div className="h-[400px] relative">
+          <LiveMap officers={officers} hotspots={hotspots} />
         </div>
         <div className="px-5 py-3 border-t border-slate-800 flex items-center gap-5 text-xs">
           <div className="flex items-center gap-2"><span className="w-3 h-3 bg-green-400 rounded-full" /><span className="text-slate-400">Officer (on duty)</span></div>
