@@ -388,14 +388,78 @@ export const apiClient = {
   async createZone(data: Partial<Zone>) { return data as Zone; },
   async updateZone(id: string, data: Partial<Zone>) { return data as Zone; },
   async deleteZone() {},
-  async getAppeals(page = 1, pageSize = 20) { return { items: [] as Appeal[], total: 0, page, pageSize }; },
+
+  async getAppeals(page = 1, pageSize = 20) {
+    const statuses: Appeal['status'][] = ['submitted', 'under_review', 'approved', 'denied', 'approved', 'approved', 'submitted', 'under_review'];
+    const reasons = [
+      'Vehicle was legally parked — signage unclear',
+      'Emergency situation — medical appointment',
+      'Parking meter malfunction reported',
+      'Disputed location — incorrect GPS data',
+      'Vehicle was in active loading/unloading',
+      'Temporary permit not scanned correctly',
+      'Zone marking not visible due to road work',
+      'Prior exemption not recorded in system',
+    ];
+    const plates = ['KA01AB1234','KA02CD5678','KA03EF9012','KA04GH3456','KA05IJ7890',
+      'KA50MN2345','KA19PQ6789','KA41RS0123','KA23TU4567','KA55VW8901',
+      'MH12AA1111','TN09BB2222','AP07CC3333','TS11DD4444','DL01EE5555'];
+    const total = 47;
+    const items: Appeal[] = Array.from({ length: Math.min(pageSize, total) }, (_, i) => {
+      const idx = (page - 1) * pageSize + i;
+      const status = statuses[idx % statuses.length];
+      const submittedDate = new Date(2025, 1 + (idx % 4), 1 + (idx % 28));
+      const reviewedDate = ['approved','denied'].includes(status)
+        ? new Date(submittedDate.getTime() + (3 + idx % 5) * 86400000) : undefined;
+      return {
+        id: `APL-${2025001 + idx}`,
+        violationId: `VIO-${300000 + idx}`,
+        licensePlate: plates[idx % plates.length],
+        status,
+        reason: reasons[idx % reasons.length],
+        submittedDate,
+        reviewedDate,
+        notes: status === 'approved' ? 'Appeal upheld — insufficient evidence' : undefined,
+      } as Appeal;
+    });
+    return { items, total, page, pageSize };
+  },
+
   async getAppealById() { return {} as Appeal; },
   async submitAppeal() { return {} as Appeal; },
   async updateAppealStatus() { return {} as Appeal; },
   async getOfficerById() { return (await apiClient.getOfficers())[0] || {} as Officer; },
   async getActiveOfficers() { return (await apiClient.getOfficers()).filter((o) => o.status === 'active'); },
-  async getComplianceEntities(page = 1, pageSize = 20) { return { items: [] as ComplianceEntity[], total: 0, page, pageSize }; },
-  async getComplianceScore() { return 75; },
+
+  async getComplianceEntities(page = 1, pageSize = 50) {
+    const types: ComplianceEntity['type'][] = ['vehicle', 'vehicle', 'vehicle', 'driver', 'driver', 'dashboard'];
+    const zones = ['Indiranagar','Koramangala','Whitefield','Jayanagar','MG Road','Hebbal',
+      'Electronic City','Yeshwanthpur','Rajajinagar','Malleswaram'];
+    const plates = ['KA01AB','KA02CD','KA03EF','KA50MN','KA19PQ','MH12AA','TN09BB','AP07CC','TS11DD','DL01EE'];
+    const total = 284;
+    const items: ComplianceEntity[] = Array.from({ length: Math.min(pageSize, total) }, (_, i) => {
+      const idx = (page - 1) * pageSize + i;
+      const type = types[idx % types.length];
+      const violations = Math.max(1, Math.round(15 - (idx % 12) * 1.1 + Math.sin(idx) * 3));
+      const score = Math.max(18, Math.min(98, Math.round(90 - violations * 3.5 + (idx % 7) * 2)));
+      return {
+        id: `ENT-${1000 + idx}`,
+        type,
+        name: type === 'vehicle'
+          ? `${plates[idx % plates.length]}${String(1000 + idx * 7).slice(-4)}`
+          : type === 'driver'
+          ? `DRV-${String(idx + 100).padStart(4, '0')}`
+          : `DASH-${zones[idx % zones.length].toUpperCase().replace(' ', '')}`,
+        violationCount: violations,
+        complianceScore: score,
+        lastViolation: new Date(2025, idx % 5, 1 + (idx % 28)),
+        tags: score < 60 ? ['high-risk'] : score < 80 ? ['monitor'] : ['compliant'],
+      } as ComplianceEntity;
+    });
+    return { items, total, page, pageSize };
+  },
+
+  async getComplianceScore() { return 74; },
   async getRevenueData() { return []; },
   async getTotalRevenue() { return 0; },
   async getRevenueByViolationType() { return {}; },

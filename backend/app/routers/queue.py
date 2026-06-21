@@ -19,19 +19,22 @@ async def get_queue_zones(
     time_window: Optional[str] = Query(None),
     zone_type: Optional[str] = Query(None),
     vehicle_focus: Optional[str] = Query(None),
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(30, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ):
-    clauses = ["police_station IS NOT NULL"]
+    clauses = ["police_station IS NOT NULL",
+                "created_datetime BETWEEN CAST('2025-01-01' AS timestamp) AND CAST('2025-05-31' AS timestamp)"]
     params: dict = {"limit": limit}
 
-    if vehicle_focus:
+    if vehicle_focus and vehicle_focus not in ("all", ""):
+        vmap = {"lgv": "LGV", "auto": "PASSENGER AUTO", "car": "CAR", "scooter": "SCOOTER"}
+        vtype = vmap.get(vehicle_focus.lower(), vehicle_focus.upper())
         clauses.append("vehicle_type = :vf")
-        params["vf"] = vehicle_focus
-    if time_window == "morning":
-        clauses.append("hour_of_day BETWEEN 6 AND 10")
-    elif time_window == "evening":
-        clauses.append("hour_of_day BETWEEN 17 AND 20")
+        params["vf"] = vtype
+    if time_window == "2h":
+        clauses.append("hour_of_day BETWEEN 7 AND 10")
+    elif time_window == "8h":
+        clauses.append("hour_of_day BETWEEN 6 AND 22")
 
     where = " AND ".join(clauses)
 
@@ -40,6 +43,7 @@ async def get_queue_zones(
         SELECT
             police_station AS zone_id,
             police_station AS zone_name,
+            MODE() WITHIN GROUP (ORDER BY junction_name) AS junction_name,
             COUNT(*) AS cnt,
             AVG(severity_weight) AS avg_sev,
             AVG(resolution_lag_mins) AS avg_lag,
@@ -63,10 +67,10 @@ async def get_queue_zones(
     for r in rows:
         cnt = int(r.cnt)
         avg_lag = float(r.avg_lag or 60.0)
+        peak_h = int(r.peak_hour or 9)
 
-        # ML-predicted priority score
         ml_score = ml.predict_score(
-            hour_of_day=int(r.peak_hour or 9),
+            hour_of_day=peak_h,
             day_of_week=int(r.peak_dow or 1),
             month=3,
             lat=float(r.lat or 12.97),
@@ -80,20 +84,39 @@ async def get_queue_zones(
             resolution_lag_mins=avg_lag,
         )
 
+        if ml_score >= 75:
+            action = "Deploy Officer — Critical"
+        elif ml_score >= 50:
+            action = "Dispatch Officer"
+        elif ml_score >= 25:
+            action = "CCTV Monitor"
+        else:
+            action = "Routine Patrol"
+
         output.append(QueueZone(
+            rank=0,
+            zone=str(r.zone_id),
             zone_id=str(r.zone_id),
             zone_name=str(r.zone_name),
+            junction_name=r.junction_name,
+            score=round(ml_score, 2),
             priority_score=round(ml_score, 2),
+            open_violations=cnt,
             violation_count=cnt,
             avg_severity=round(float(r.avg_sev or 0), 2),
             avg_lag_mins=round(avg_lag, 2),
+            peak_hour=peak_h,
+            recommended_action=action,
             lat=float(r.lat) if r.lat else None,
+            lon=float(r.lng) if r.lng else None,
             lng=float(r.lng) if r.lng else None,
         ))
 
-    # Sort by ML priority score (highest = dispatch first)
-    output.sort(key=lambda z: z.priority_score, reverse=True)
+    output.sort(key=lambda z: z.score, reverse=True)
+    for i, z in enumerate(output):
+        z.rank = i + 1
     return output[:limit]
+
 
 
 @router.get("/zone/{zone_id}")

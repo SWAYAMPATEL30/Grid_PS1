@@ -75,13 +75,21 @@ class ZoneCongestion(BaseModel):
 # ─── Enforcement Queue ───────────────────────────────────────────────────────
 
 class QueueZone(BaseModel):
-    zone_id: str
-    zone_name: str
-    priority_score: float
-    violation_count: int
-    avg_severity: float
+    rank: int = 1
+    zone: str
+    zone_id: Optional[str] = None
+    zone_name: Optional[str] = None
+    junction_name: Optional[str] = None
+    score: float = 0.0
+    priority_score: Optional[float] = None
+    open_violations: int = 0
+    violation_count: Optional[int] = None
+    avg_severity: Optional[float] = None
     avg_lag_mins: Optional[float] = None
+    peak_hour: int = 9
+    recommended_action: str = "Dispatch Officer"
     lat: Optional[float] = None
+    lon: Optional[float] = None
     lng: Optional[float] = None
 
 
