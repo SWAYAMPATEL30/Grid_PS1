@@ -122,8 +122,8 @@ def process_chunk(df: pd.DataFrame) -> pd.DataFrame:
 
     # ── IST derived columns ──────────────────────────────────────────────────
     created_ist = df["created_datetime"].dt.tz_convert(IST)
-    df["hour_of_day"] = created_ist.dt.hour
-    df["day_of_week"] = created_ist.dt.dayofweek  # 0=Mon
+    df["hour_of_day"] = created_ist.dt.hour.astype("Int64")
+    df["day_of_week"] = created_ist.dt.dayofweek.astype("Int64")  # 0=Mon
 
     # ── Resolution lag ───────────────────────────────────────────────────────
     if "action_taken_timestamp" in df.columns:
@@ -141,19 +141,13 @@ def process_chunk(df: pd.DataFrame) -> pd.DataFrame:
     # ── Severity weight ──────────────────────────────────────────────────────
     df["severity_weight"] = df["_vt_list"].apply(severity_for_types)
 
-    # ── Geom (WKT for GEOGRAPHY) ─────────────────────────────────────────────
-    df["geom_wkt"] = df.apply(
-        lambda r: f"SRID=4326;POINT({r['longitude']} {r['latitude']})"
-        if pd.notna(r.get("latitude")) and pd.notna(r.get("longitude"))
-        else None,
-        axis=1,
-    )
+
 
     return df
 
 
 COLUMNS_ORDER = [
-    "id", "latitude", "longitude", "geom_wkt", "location", "vehicle_number",
+    "id", "latitude", "longitude", "location", "vehicle_number",
     "vehicle_type", "violation_types_pg", "offence_codes_pg",
     "created_datetime", "closed_datetime", "action_taken_timestamp",
     "device_id", "created_by_id", "center_code", "police_station",
@@ -165,7 +159,7 @@ COLUMNS_ORDER = [
 
 COPY_SQL = """
 COPY violations (
-  id, latitude, longitude, geom,
+  id, latitude, longitude,
   location, vehicle_number, vehicle_type,
   violation_types, offence_codes,
   created_datetime, closed_datetime, action_taken_timestamp,
@@ -177,7 +171,6 @@ COPY violations (
 ON CONFLICT (id) DO UPDATE SET
   latitude = EXCLUDED.latitude,
   longitude = EXCLUDED.longitude,
-  geom = EXCLUDED.geom,
   violation_types = EXCLUDED.violation_types,
   offence_codes = EXCLUDED.offence_codes,
   hour_of_day = EXCLUDED.hour_of_day,
@@ -191,7 +184,7 @@ ON CONFLICT (id) DO UPDATE SET
 # We'll use a staging table approach: COPY into temp, then INSERT ... ON CONFLICT.
 COPY_TEMP_SQL = """
 COPY _violations_staging (
-  id, latitude, longitude, geom,
+  id, latitude, longitude,
   location, vehicle_number, vehicle_type,
   violation_types, offence_codes,
   created_datetime, closed_datetime, action_taken_timestamp,
@@ -208,7 +201,6 @@ SELECT * FROM _violations_staging
 ON CONFLICT (id) DO UPDATE SET
   latitude = EXCLUDED.latitude,
   longitude = EXCLUDED.longitude,
-  geom = EXCLUDED.geom,
   violation_types = EXCLUDED.violation_types,
   offence_codes = EXCLUDED.offence_codes,
   hour_of_day = EXCLUDED.hour_of_day,
@@ -247,12 +239,23 @@ def prepare_copy_buffer(df: pd.DataFrame) -> io.StringIO:
         lambda b: "true" if b else "false"
     )
 
+    # center_code must be integer, not float like 9.0
+    if "center_code" in df.columns:
+        df["center_code"] = df["center_code"].apply(
+            lambda v: str(int(float(v))) if pd.notna(v) and v != "" else ""
+        )
+
     buf = io.StringIO()
     for _, row in df.iterrows():
         vals = []
         for col in COLUMNS_ORDER:
             val = row.get(col)
-            if val is None or (isinstance(val, float) and pd.isna(val)):
+            # Safely check for NA – works for bool, str, float, NaT, None
+            try:
+                is_na = pd.isna(val)
+            except (TypeError, ValueError):
+                is_na = False
+            if is_na:
                 vals.append("")
             elif isinstance(val, pd.Timestamp):
                 vals.append(val.isoformat())
@@ -270,7 +273,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv", required=True, help="Path to the violations CSV file")
     parser.add_argument("--truncate", action="store_true", help="Truncate table before loading")
-    parser.add_argument("--chunksize", type=int, default=50_000, help="Rows per chunk")
+    parser.add_argument("--chunksize", type=int, default=5_000, help="Rows per chunk")
     args = parser.parse_args()
 
     csv_path = Path(args.csv)

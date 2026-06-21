@@ -13,6 +13,14 @@ DATABASE_URL = os.getenv(
     "postgresql+asyncpg://parksight:parksight123@localhost:5432/parksight"
 )
 
+# Railway auto-injects DATABASE_URL starting with postgresql:// or postgres://
+# SQLAlchemy async requires postgresql+asyncpg://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,

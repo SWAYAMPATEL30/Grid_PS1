@@ -62,27 +62,27 @@ export default function PredictiveIntelligencePage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <KPICard
-          label="Prediction Accuracy"
+          title="Prediction Accuracy"
           value="92.3%"
-          change="+2.1%"
+          trend={{ value: 2.1, isPositive: true }}
           icon={<TrendingUp className="h-5 w-5" />}
         />
         <KPICard
-          label="Next 24H Forecast"
+          title="Next 24H Forecast"
           value="3,240"
-          change="violations predicted"
+          trend={{ value: 5.2, isPositive: false }}
           icon={<Clock className="h-5 w-5" />}
         />
         <KPICard
-          label="High Confidence Zones"
-          value="12"
-          change="out of 28 zones"
+          title="High Confidence Zones"
+          value="12 / 28"
+          trend={{ value: 8.0, isPositive: true }}
           icon={<AlertCircle className="h-5 w-5" />}
         />
         <KPICard
-          label="Weather Impact"
+          title="Weather Impact Today"
           value="Rainy"
-          change="+23% violations today"
+          trend={{ value: 23, isPositive: false }}
           icon={<Zap className="h-5 w-5" />}
         />
       </div>

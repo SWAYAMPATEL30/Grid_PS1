@@ -1,0 +1,15 @@
+# Railway configuration — deploys 3 services from one repo:
+# 1. PostgreSQL (managed plugin)
+# 2. api     (backend/  — FastAPI + Gunicorn)
+# 3. frontend (root/    — Next.js)
+
+[build]
+builder = "DOCKERFILE"
+
+# ── Backend service config ──────────────────────────────────────────────────
+# Set in Railway dashboard → api service → Settings → Root Directory: backend
+# Set Start Command: gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w 4 --bind 0.0.0.0:$PORT --timeout 120
+
+# ── Frontend service config ─────────────────────────────────────────────────
+# Set in Railway dashboard → frontend service → Settings → Root Directory: . (root)
+# Railway auto-finds Dockerfile in root

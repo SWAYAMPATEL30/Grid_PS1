@@ -18,7 +18,7 @@ from app.ml.predictor import ml
 router = APIRouter(prefix="/api/overview", tags=["overview"])
 
 def _date_range(from_date: Optional[str], to_date: Optional[str]) -> tuple[str, str]:
-    return (from_date or "2025-01-01"), (to_date or "2025-05-31")
+    return (from_date or "2023-11-01"), (to_date or "2024-04-30")
 
 @router.get("/kpis", response_model=OverviewKPIs)
 async def get_kpis(
@@ -34,7 +34,7 @@ async def get_kpis(
         text("""
         SELECT
           COUNT(*) AS total_violations,
-          AVG(resolution_lag_mins) FILTER (WHERE resolution_lag_mins IS NOT NULL) AS avg_lag,
+          AVG(EXTRACT(EPOCH FROM (validation_timestamp - created_datetime))/60) FILTER (WHERE validation_timestamp IS NOT NULL) AS avg_lag,
           COUNT(DISTINCT police_station) FILTER (WHERE police_station IS NOT NULL) AS hotspot_stations
         FROM violations
         WHERE created_datetime BETWEEN :fd AND :td
@@ -64,7 +64,8 @@ async def get_kpis(
     )
     prev_total = int((prev_res.scalar() or 0))
     violations_pct = round(((total - prev_total) / max(prev_total, 1)) * 100, 2)
-    delivery_risk = min(100.0, round((avg_lag / 120.0) * 100, 2))
+    # Average validation time is very high (around 96 hours). Let's base risk on 24 hours (1440 mins)
+    delivery_risk = min(100.0, round((avg_lag / 1440.0) * 100, 2))
 
     return OverviewKPIs(
         total_violations=total,
@@ -165,6 +166,6 @@ async def get_top_hotspots(limit: int = Query(5, ge=1, le=50), db: AsyncSession 
 
 @router.get("/worst-lag-stations", response_model=list[WorstLagStation])
 async def get_worst_lag_stations(limit: int = Query(10, ge=1, le=50), db: AsyncSession = Depends(get_db)):
-    result = await db.execute(text("SELECT police_station AS station, AVG(resolution_lag_mins) AS avg_lag FROM violations WHERE police_station IS NOT NULL AND resolution_lag_mins IS NOT NULL GROUP BY police_station ORDER BY avg_lag DESC LIMIT :limit"), {"limit": limit})
+    result = await db.execute(text("SELECT police_station AS station, AVG(EXTRACT(EPOCH FROM (validation_timestamp - created_datetime))/60) AS avg_lag FROM violations WHERE police_station IS NOT NULL AND validation_timestamp IS NOT NULL GROUP BY police_station ORDER BY avg_lag DESC LIMIT :limit"), {"limit": limit})
     rows = result.fetchall()
     return [WorstLagStation(station=r.station, avg_lag_mins=round(float(r.avg_lag), 2)) for r in rows]
